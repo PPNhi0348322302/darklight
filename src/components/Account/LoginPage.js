@@ -8,7 +8,7 @@ const LoginPage = () => {
 
   let navigate = useNavigate()
 
-  const handleregister = () => {
+  const handleRegister = () => {
     navigate('/register')
   }
 
@@ -107,7 +107,7 @@ const LoginPage = () => {
       </IconsContainer>
       <TitleContainer>
         <button>Forgot Password ?</button>
-        <button onClick={handleregister}>Register Now</button>
+        <button onClick={handleRegister}>Register Now</button>
       </TitleContainer>
     </MainContainer>
   )
