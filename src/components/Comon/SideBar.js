@@ -3,7 +3,6 @@ import styled from 'styled-components'
 import {NavLink} from 'react-router-dom';
 import {useStore} from '../../hooks'
 import {actions} from '../../store'
-import {useAuth} from '../../shared/AuthContext'
 //icons: 
 import {FiSettings} from "react-icons/fi"
 import {AiOutlineHome, AiOutlineMenu} from "react-icons/ai"
@@ -22,7 +21,6 @@ const SideBar = ({screen}) => {
     const [state, dispatch]  = useStore()
     const [show, setShow] = useState(false)
 
-    const {logout} = useAuth()
     const MenuList = [
         {
             path:"/",
@@ -64,15 +62,7 @@ const SideBar = ({screen}) => {
         dispatch(actions.setSearch(''))
         dispatch(actions.setOption({}))
     }
-    // const handleTheme = () => {
-    //     if (state.theme === 'Dark'){
-    //         dispatch(actions.setTheme('Light'))
-    //     }
-    //     else {
-    //         dispatch(actions.setTheme('Dark'))          
-    //     }
-        
-    // }
+
 
     //Toast
     let navigate = useNavigate()
@@ -113,6 +103,7 @@ const SideBar = ({screen}) => {
         }
         setList([...list, toastProperties]);
     }
+
     const handleClick =() => {
         showToast('warning',`You need to login to use ${state.option.name}`)
     }
@@ -215,7 +206,8 @@ const SideBar = ({screen}) => {
                                 to = {`${state.login === false ?'/login' : '/'}`}
                                 className='item'
                                 onClick={() => {
-                                        logout()
+                                        console.log('Logout');
+                                        
                                     }
                                 }
                             >

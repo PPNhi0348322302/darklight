@@ -5,6 +5,7 @@ import { TabTitle } from '../store/Genera'
 
 const Register = () => {
   TabTitle('Register | DarkLight')
+  
   return (
     <Container>
         <RegisterPage />

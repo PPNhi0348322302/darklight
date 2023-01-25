@@ -3,36 +3,13 @@ import styled from 'styled-components'
 import { TabTitle } from '../store/Genera'
 import SideBar from '../components/Comon/SideBar'
 import Sidebarmini from '../components/Comon/Sidebarmini'
-import {useAuth} from '../shared/AuthContext'
 import { NavLink } from 'react-router-dom'
-import {db} from '../shared/firebase'
-import {
-  query,
-  collection,
-  onSnapshot,
-  where
-} from 'firebase/firestore'
 
 const History = () => {
   TabTitle('History | DarkLight')
   const [history, setHistory] = useState([])
-  const {currentUser} = useAuth()
   
-  useEffect(() =>{
-      if (currentUser !== null){
-        const histry = collection(db, 'historyMovie')
-        const q = query(histry, where('userID', '==', currentUser.uid))
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-          let historyList = []
-          querySnapshot.forEach((doc) => {
-            historyList.push({...doc.data(), id: doc.id})
-          })
-          setHistory(historyList)
-        })
-        return () => unsubscribe()
-      }
-      else setHistory([])
-  }, [currentUser]) 
+  //get data
   
   //screen
   const [type, setType] = useState(window.innerWidth <=480 ? 2 : window.innerWidth <=900 ? 1 :0)

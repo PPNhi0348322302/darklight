@@ -3,7 +3,6 @@ import styled from 'styled-components'
 import {NavLink} from 'react-router-dom';
 import {useStore} from '../../hooks'
 // import {actions} from '../../store'
-import {useAuth} from '../../shared/AuthContext'
 import { useNavigate } from 'react-router-dom';
 //icons: 
 import {AiOutlineHome} from "react-icons/ai"
@@ -15,7 +14,6 @@ import {MdOutlineAccountCircle, MdOutlineHistory, MdOutlineBookmarks} from "reac
 
 const SideBar = () => {
     const [state]  = useStore()
-    const {logout} = useAuth()
     let navigate = useNavigate()
     const MenuList = [
         {
@@ -90,7 +88,8 @@ const SideBar = () => {
                         <div 
                             className='item'
                             onClick= {() => {
-                                logout()
+                                console.log('Logout');
+                                
                                 navigate('/login')
                             }
                         }

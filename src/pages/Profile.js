@@ -3,22 +3,20 @@ import styled from 'styled-components'
 import SideBar from '../components/Comon/SideBar'
 import Sidebarmini from '../components/Comon/Sidebarmini'
 import { TabTitle } from '../store/Genera'
-import {useAuth} from '../shared/AuthContext'
+import { useStore } from '../hooks'
+
 const Profile = () => {
   TabTitle('Profile | DarkLight')
-  const {currentUser, updateUserPassword} = useAuth()
   const [password, setPassword] = useState()
   const [error, setError] = useState()
   const [success, setSuccess] = useState()
-
   const handleSubmit = async(e) => {
     e.preventDefault()
-    await updateUserPassword(currentUser, password).then((res) => {
-        setSuccess('Password updated success')
-    }).catch((err) => {
-        setError(err.message)
-    })
+    //update pw
   } 
+
+  const data = useStore()
+  const currentUser = data[0].user
 
   //screen
   const [type, setType] = useState(window.innerWidth <=480 ? 2 : window.innerWidth <=900 ? 1 :0)
@@ -49,10 +47,10 @@ const Profile = () => {
           <Prof scr = {type}>
               <h2>Profile Page</h2>
               <div className='avatar'>
-                { currentUser.photoURL !== null ? <img src={currentUser.photoURL} alt="" /> : <img src='./images/default-avatar.png' alt="" />}
+                { currentUser.avatar !== null ? <img src={currentUser.avatar} alt="" /> : <img src='./images/default-avatar.png' alt="" />}
               </div>
               <div className='info'>
-                  <span>Name:  {currentUser.displayName||'Default'}</span>
+                  <span>Name:  {currentUser.name||'Default'}</span>
                   <span>Email:  {currentUser.email}</span>
                   <span>Change Password:  </span>
                   <form className='form-change' onSubmit={handleSubmit}>

@@ -3,35 +3,14 @@ import styled from 'styled-components'
 import { TabTitle } from '../store/Genera'
 import SideBar from '../components/Comon/SideBar'
 import Sidebarmini from '../components/Comon/Sidebarmini'
-import {useAuth} from '../shared/AuthContext'
 import { NavLink } from 'react-router-dom'
-import {db} from '../shared/firebase'
-import {
-  query,
-  collection,
-  onSnapshot,
-  where
-} from 'firebase/firestore'
+
 
 const Bookmark = () => {
   const [Bookmark, setBookmark] = useState([])
-  const {currentUser} = useAuth()
+  // const currentUser = null
   TabTitle('Bookmark | DarkLight')
-  useEffect(() =>{
-      if (currentUser !== null){
-        const books = collection(db, 'bookmarks')
-        const q = query(books, where('userID', '==', currentUser.uid))
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-          let BookmarkList = []
-          querySnapshot.forEach((doc) => {
-            BookmarkList.push({...doc.data(), id: doc.id})
-          })
-          setBookmark(BookmarkList)
-        })
-        return () => unsubscribe()
-      }
-      else setBookmark([])
-  }, [currentUser])  
+  //get data bookmark
 
   //screen
   const [type, setType] = useState(window.innerWidth <=480 ? 2 : window.innerWidth <=900 ? 1 :0)

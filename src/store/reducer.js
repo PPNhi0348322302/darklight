@@ -5,7 +5,8 @@ import {
     SET_CONTENT_TYPE,
     SET_SEARCH,
     SET_OPTION, 
-    SET_SCREEN} 
+    SET_SCREEN,
+    SET_USER} 
 from "./constants"
 
 const iniState = {
@@ -14,7 +15,8 @@ const iniState = {
     login: false,
     search: '',
     option: {},
-    screen:0
+    screen:0,
+    user: {}
 }
 
 function reducer(state, action){
@@ -48,6 +50,11 @@ function reducer(state, action){
             return {
                 ...state,
                 screen: action.payload
+            }
+        case SET_USER:
+            return {
+                ...state,
+                user: action.payload
             }
         default:
             return state

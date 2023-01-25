@@ -1,6 +1,5 @@
 import React, {useEffect} from 'react'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
-import { useAuth } from '../../shared/AuthContext'
 import Home from '../../pages/Home'
 import Explore from '../../pages/Explore'
 import History from '../../pages/History'
@@ -13,11 +12,11 @@ import Detail from '../FilmDetail/Detail'
 import FilmWatch from '../FilmWatch/FilmWatch'
 
 const AppRouter = () => {
-  const {logout} = useAuth()
   
   useEffect(() => {
     const handleTabClosing = () => {
-      logout()
+      console.log('Logout');
+      
     }
 
     window.addEventListener("beforeunload", handleTabClosing)
@@ -25,9 +24,6 @@ const AppRouter = () => {
     return window.removeEventListener('beforeunload', handleTabClosing)
   })
   
-  
-  
-
   return (
     <Router>
         <Routes>

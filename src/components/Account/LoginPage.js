@@ -1,22 +1,56 @@
 import React, {useState} from 'react'
 import styled from 'styled-components'
 import {useNavigate} from 'react-router-dom'
-import {useAuth} from '../../shared/AuthContext'
 import {useStore} from '../../hooks'
 import {actions} from '../../store'
-const LoginPage = () => {
+import {useGoogleLogin} from '@react-oauth/google'
+import axios from "axios"
 
+const LoginPage = () => {
+  const data  = useStore() 
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState()
   let navigate = useNavigate()
 
   const handleRegister = () => {
     navigate('/register')
   }
 
-  const data  = useStore() 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState()
-  const {login, googleSignIn, FacebookSignIn} = useAuth()
+  const login = async ({email, password}) => {
+      
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_BASE_URL}/user/login`,
+        {email, password},
+        { withCredentials: true }
+      )
+      return response.data
+    } 
+    catch (error) {
+        console.log(error)
+    }
+  }
+
+  const handleGoogleSignIn = useGoogleLogin({
+    onSuccess: async response => {
+        try {
+            const res = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
+                headers: {
+                    "Authorization": `Bearer ${response.access_token}`
+                }
+            })
+            console.log(res);
+            
+            data[1](actions.setLogIn(true)) 
+            navigate('/')
+            console.log(res.data)
+        } catch (err) {
+          setError(error.message)
+        }
+
+    }
+})
 
   const handleSubmit = async(e) => {
       e.preventDefault()
@@ -24,48 +58,26 @@ const LoginPage = () => {
       if(password === '' || email === '') {
           setError('Password, email does not empty')
       } else {
-          await login(email, password)
-          .then((res) => {
-            data[1](actions.setLogIn(true)) 
+        try{
+          const res = await login({email, password})
+          console.log(res)
+          if(res.token){
+            data[1](actions.setUser(res)) 
+            data[1](actions.setLogIn(true))
             navigate('/')
-          })
-          .catch((err) => {
-              setError(err.message)
-          })
+          }
+        }
+        catch(error) {
+          console.log(error);
+          
+        }
       }
   }
 
-  const handleGoogleSignIn = async (e) => {
-    e.preventDefault()
-    setError()
-
-    await googleSignIn()
-    .then((res) => {
-      data[1](actions.setLogIn(true)) 
-      navigate('/')
-    })
-    .catch((error) => {
-      setError(error.message)
-    })
-  }
-
-  const handleFacebookSignIn = async (e) => {
-    e.preventDefault()
-    setError()
-
-    await FacebookSignIn()
-    .then((res) => {
-      data[1](actions.setLogIn(true)) 
-      navigate('/')
-    })
-    .catch((error) => {
-      setError(error.message)
-    })
-  }
 
   return (
     <MainContainer>
-      <WelcomeText>Welcome</WelcomeText>
+      <WelcomeText>DarkLight</WelcomeText>
       <InputContainer onSubmit = {handleSubmit}>
         <span>{error}</span>
         <StyledInput 
@@ -77,7 +89,7 @@ const LoginPage = () => {
 
         <StyledInput 
             type="password" 
-            placeholder="password" 
+            placeholder="Password" 
             value = {password}
             onChange={e => setPassword(e.target.value)}
         />
@@ -94,15 +106,10 @@ const LoginPage = () => {
       <IconsContainer>
         <button 
             className='icon'
-            onClick={e =>handleFacebookSignIn(e)}
-        >
-          <img src='images/fb.png' alt="" />
-        </button>
-        <button 
-            className='icon'
             onClick={e=>handleGoogleSignIn(e)}
         >
             <img src='images/gg.png' alt="" />
+            <span>Login with Google</span>
         </button>
       </IconsContainer>
       <TitleContainer>
@@ -117,8 +124,6 @@ const MainContainer = styled.div`
   display: flex;
   align-items: center;
   flex-direction: column;
-  height: 80vh;
-  width: 30vw;
   background: rgba(255, 255, 255, 0.15);
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
   backdrop-filter: blur(8.5px);
@@ -148,7 +153,7 @@ const MainContainer = styled.div`
   }
   @media only screen and (min-width: 768px) {
     width: 80vw;
-    height: 80vh;
+    height: 60vh;
   }
   @media only screen and (min-width: 1024px) {
     width: 70vw;
@@ -156,7 +161,7 @@ const MainContainer = styled.div`
   }
   @media only screen and (min-width: 1280px) {
     width: 30vw;
-    height: 80vh;
+    height: 60vh;
   }
 `;
 
@@ -181,13 +186,13 @@ const StyledInput = styled.input`
   background: rgba(255, 255, 255, 0.15);
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
   border-radius: 2rem;
-  width: 80%;
-  height: 3rem;
-  padding: 1rem;
+  width: 60%;
+  height: 2rem;
+  padding: 0.5rem 2rem;
   border: none;
   outline: none;
   color: #3c354e;
-  font-size: 1rem;
+  font-size: 14px;
   font-weight: bold;
   margin-bottom: 20px;
   &:focus {
@@ -200,7 +205,7 @@ const StyledInput = styled.input`
   &::placeholder {
     color: #b9abe099;
     font-weight: 100;
-    font-size: 1rem;
+    font-size: 14px;
   }
 `
 
@@ -216,8 +221,9 @@ const StyledButton = styled.button`
 background: linear-gradient(to right, #14163c 0%, #03217b 79%);
 text-transform: uppercase;
 letter-spacing: 0.2rem;
-width: 65%;
-height: 3rem;
+width: 74%;
+height: 2rem;
+padding: 0.5rem 2rem;
 border: none;
 color: white;
 border-radius: 2rem;
@@ -231,39 +237,46 @@ cursor: pointer;
 
 const LoginWith = styled.h5`
   font-weight: normal;
-  font-size: 17px;
+  font-size: 10px;
   letter-spacing: 0.4rem;
 `;
 
 const HorizontalRule = styled.hr`
   width: 90%;
-  height: 0.3rem;
+  height: 0.2rem;
   border-radius: 0.8rem;
   border: none;
   background: linear-gradient(to right, #14163c 0%, #03217b 79%);
   background-color: #ebd0d0;
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
   backdrop-filter: blur(25px);
 `;
 
 const IconsContainer = styled.div`
   display: flex;
   justify-content: space-evenly;
-  margin: 1rem 0 2rem 0;
+  margin: 0.5rem 0 1rem 0;
   width: 60%;
+  border: none;
 
   .icon{
-    height: 3.5rem;
-    width: 3.5rem;
+    height: 2.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius:50%;
-    background: white;
+    border-radius:8px;
+    background: rgba(255, 255, 255, 0.6);
+    padding: 0.5rem 2rem;
     cursor: pointer;
     img {
-        width:2rem;
-        height:2rem;
+        width:1.5rem;
+        height:1.5rem;
+    }
+
+    span{
+      margin-left: 30px;
+      font-size: 14px;
+      font-weight: bold;
     }
   }
   
@@ -275,8 +288,9 @@ const TitleContainer = styled.div`
   width: 80%;
   button{
     cursor: pointer;
-    font-size: 17px;
+    font-size: 12px;
     font-style: italic;
+    font-weight: normal;
     background: transparent;
     border: none;
     outline: none;

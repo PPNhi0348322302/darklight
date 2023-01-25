@@ -3,13 +3,12 @@ import styled from 'styled-components'
 import {actions} from '../../store'
 import { useStore } from '../../hooks'
 import { useNavigate } from 'react-router-dom'
-import {useAuth} from '../../shared/AuthContext'
 const ContentHeader = (props) => {
     const data = useStore()
     const refTV = useRef()
     const refMovie = useRef()
     let navigate = useNavigate()
-    const {currentUser} = useAuth()
+    const currentUser = data[0].user
     
     const handleClick = (e) => {
         if(!e.current.classList.contains('active'))
@@ -55,8 +54,8 @@ const ContentHeader = (props) => {
                         navigate('/profile')
                 }}
             >
-                { currentUser!==null && currentUser.displayName!== null ?  <span>{currentUser.displayName}</span> : ''}
-                { currentUser!==null && currentUser.photoURL!== null ? <img src={currentUser.photoURL} alt="" /> : <img src='./images/default-avatar.png' alt="" />}
+                { currentUser!==null && currentUser.name!== null ?  <span>{currentUser.name}</span> : ''}
+                { currentUser!==null && currentUser.avatar!== null ? <img src={currentUser.avatar} alt="" /> : <img src='./images/default-avatar.png' alt="" />}
             </div>
         </CTHeader>
     </div>

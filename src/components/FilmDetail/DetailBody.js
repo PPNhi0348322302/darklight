@@ -1,4 +1,4 @@
-import React,{useState, useEffect} from 'react'
+import React,{useState} from 'react'
 import styled from 'styled-components'
 import ReactPlayer from 'react-player'
 import {useAxios} from '../../hooks'
@@ -9,47 +9,17 @@ import {HiOutlineDotsHorizontal} from 'react-icons/hi'
 import {GiShare} from 'react-icons/gi'
 import {FaPlay} from 'react-icons/fa'
 import { NavLink } from 'react-router-dom'
-import {useAuth} from '../../shared/AuthContext'
-import { collection, query, where, onSnapshot } from "firebase/firestore"
-import { db } from '../../shared/firebase'
 
 const DetailBody = ({id, type, screen}) => {
-    const {currentUser, createData, deleteData} = useAuth()
     const data  = useStore()
     const [over, setOver] = useState(true)
     const [cast, setCast] = useState(false)
     const [review, setReview] = useState(false)
     const [seasons, setSeasons] = useState(false)
-    const [idU, setIdU] = useState(null)
     const [isBookmark, setIsBookmark] = useState(false)
 
     //query data:
-    useEffect(() =>{
-      if (currentUser !== null){
-        const histry = collection(db, 'bookmarks')
-        const q = query(histry, where('userID', '==', currentUser.uid))
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-          let historyList = []
-          querySnapshot.forEach((doc) => {
-            historyList.push({...doc.data(), id: doc.id})
-          })
-
-          const list = historyList.filter( item => item.idMovie === id)
-          if(Array.isArray(list) && list.length !== 0  && data[0].login ===true)
-            {
-              setIsBookmark(true)
-              setIdU(historyList[0].id)
-            }
-          else 
-            {
-              setIsBookmark(false)
-              setIdU(null)
-            }
-        })
-        return () => unsubscribe()
-      }
-      else setIsBookmark(false)
-  }, [currentUser, data,id])  
+    //bookmark
   
     //end
 
@@ -155,12 +125,13 @@ const DetailBody = ({id, type, screen}) => {
                     if(data[0].login ===true)
                       {if(isBookmark === true)
                         {
-                          deleteData('bookmarks',idU)
+                          console.log('Delete bookmark');
+                          
                           setIsBookmark(false)
                         }
                       else
                         {
-                          createData('bookmarks',id, type, Data.poster_path, Data.name||Data.title)
+                          console.log('Create bookmark');
                           setIsBookmark(true)
                         }}
                   }
@@ -186,7 +157,7 @@ const DetailBody = ({id, type, screen}) => {
                 className='detail-header-watch'
                 onClick={() => {
                       if(data[0].login ===true)
-                        createData('historyMovie',id, type, Data.poster_path, Data.name||Data.title)
+                      console.log('Create bookmark');
                     }
                   }
               >
