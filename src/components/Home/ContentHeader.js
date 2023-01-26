@@ -8,7 +8,7 @@ const ContentHeader = (props) => {
     const refTV = useRef()
     const refMovie = useRef()
     let navigate = useNavigate()
-    const currentUser = data[0].user
+    const currentUser = data[0].user && data[0].user._id ? data[0].user : null
     
     const handleClick = (e) => {
         if(!e.current.classList.contains('active'))

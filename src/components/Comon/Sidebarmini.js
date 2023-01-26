@@ -2,8 +2,9 @@ import React from 'react'
 import styled from 'styled-components'
 import {NavLink} from 'react-router-dom';
 import {useStore} from '../../hooks'
-// import {actions} from '../../store'
-import { useNavigate } from 'react-router-dom';
+import {actions} from '../../store'
+import axios from "axios"
+
 //icons: 
 import {AiOutlineHome} from "react-icons/ai"
 import {IoCompassOutline} from "react-icons/io5"
@@ -13,8 +14,8 @@ import {MdOutlineAccountCircle, MdOutlineHistory, MdOutlineBookmarks} from "reac
 
 
 const SideBar = () => {
-    const [state]  = useStore()
-    let navigate = useNavigate()
+    const [state, dispatch]  = useStore()
+
     const MenuList = [
         {
             path:"/",
@@ -44,6 +45,19 @@ const SideBar = () => {
             name:"Bookmark"
         }
     ]
+
+    const logOut = async () => {
+        try {
+          const response = await axios.post(
+            `${process.env.REACT_APP_BASE_URL}/user/logout`,
+            { withCredentials: true }
+          )
+          return {res: response.data}
+        } 
+        catch (error) {
+            return {error: error}
+        }
+      }
 
 
     // const handleTheme = () => {
@@ -85,17 +99,22 @@ const SideBar = () => {
                         >
                             <div className='icon'>{state.theme ==='Dark'? <HiOutlineMoon/> : <BiSun/>}</div>
                         </div> */}
-                        <div 
+                        <NavLink 
+                            to = {`${state.login === false ?'/login' : '/'}`}
                             className='item'
-                            onClick= {() => {
-                                console.log('Logout');
-                                
-                                navigate('/login')
+                            onClick={ async () => {
+                                    if(state.login === true){
+                                        const res = await logOut()
+                                        if( res && res.res ){
+                                            dispatch(actions.setUser(null))
+                                            dispatch(actions.setLogIn(false))
+                                        }
+                                    }
+                                }
                             }
-                        }
                         >
                             <div className='icon'>{state.login===true?<BiLogOutCircle/> : <BiLogInCircle/>}</div>
-                        </div>   
+                        </NavLink>    
                     </div>
                 </div>
             </Headerside>

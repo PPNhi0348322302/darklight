@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import {NavLink} from 'react-router-dom';
 import {useStore} from '../../hooks'
 import {actions} from '../../store'
+import axios from "axios"
 //icons: 
 import {FiSettings} from "react-icons/fi"
 import {AiOutlineHome, AiOutlineMenu} from "react-icons/ai"
@@ -15,7 +16,7 @@ import { FaTimes } from 'react-icons/fa'
 import { CgMenuRight } from 'react-icons/cg'
 import {BiCheckCircle, BiInfoCircle, BiXCircle} from 'react-icons/bi'
 import {useNavigate} from 'react-router-dom'
-import Toast from './Toast';
+import Toast from './Toast'
 
 const SideBar = ({screen}) => {
     const [state, dispatch]  = useStore()
@@ -62,6 +63,19 @@ const SideBar = ({screen}) => {
         dispatch(actions.setSearch(''))
         dispatch(actions.setOption({}))
     }
+
+    const logOut = async () => {
+        try {
+          const response = await axios.post(
+            `${process.env.REACT_APP_BASE_URL}/user/logout`,
+            { withCredentials: true }
+          )
+          return {res: response.data}
+        } 
+        catch (error) {
+            return {error: error}
+        }
+      }
 
 
     //Toast
@@ -205,9 +219,14 @@ const SideBar = ({screen}) => {
                             <NavLink 
                                 to = {`${state.login === false ?'/login' : '/'}`}
                                 className='item'
-                                onClick={() => {
-                                        console.log('Logout');
-                                        
+                                onClick={ async () => {
+                                        if(state.login === true){
+                                            const res = await logOut()
+                                            if( res && res.res ){
+                                                dispatch(actions.setUser(null))
+                                                dispatch(actions.setLogIn(false))
+                                            }
+                                        }
                                     }
                                 }
                             >

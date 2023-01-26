@@ -25,10 +25,25 @@ const LoginPage = () => {
         {email, password},
         { withCredentials: true }
       )
-      return response.data
+      return {data: response.data}
     } 
     catch (error) {
-        console.log(error)
+        return {err: error}
+    }
+  }
+
+  const loginWGoogle = async ({email, name, avatar}) => {
+      
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_BASE_URL}/user/loginWithGoogle`,
+        {email, name, avatar},
+        { withCredentials: true }
+      )
+      return {data: response.data}
+    } 
+    catch (error) {
+        return {err: error}
     }
   }
 
@@ -40,11 +55,20 @@ const LoginPage = () => {
                     "Authorization": `Bearer ${response.access_token}`
                 }
             })
-            console.log(res);
-            
-            data[1](actions.setLogIn(true)) 
-            navigate('/')
-            console.log(res.data)
+            try{
+              const info = res.data
+              const rs = await loginWGoogle({email: info.email, name: info.name, avatar: info.picture})
+              
+              if( rs && rs.data.token ){
+                data[1](actions.setUser(rs.data)) 
+                data[1](actions.setLogIn(true))
+                navigate('/')
+              }
+            }
+            catch(err){
+              console.log('err: ' + err)
+              
+            }
         } catch (err) {
           setError(error.message)
         }
@@ -60,16 +84,15 @@ const LoginPage = () => {
       } else {
         try{
           const res = await login({email, password})
-          console.log(res)
-          if(res.token){
-            data[1](actions.setUser(res)) 
+          
+          if( res && res.data.token ){
+            data[1](actions.setUser(res.data)) 
             data[1](actions.setLogIn(true))
             navigate('/')
           }
         }
         catch(error) {
           console.log(error);
-          
         }
       }
   }
