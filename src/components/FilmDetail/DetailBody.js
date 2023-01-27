@@ -1,4 +1,4 @@
-import React,{useState} from 'react'
+import React,{useEffect, useState} from 'react'
 import styled from 'styled-components'
 import ReactPlayer from 'react-player'
 import {useAxios} from '../../hooks'
@@ -9,26 +9,87 @@ import {HiOutlineDotsHorizontal} from 'react-icons/hi'
 import {GiShare} from 'react-icons/gi'
 import {FaPlay} from 'react-icons/fa'
 import { NavLink } from 'react-router-dom'
+import axios from "axios"
 
 const DetailBody = ({id, type, screen}) => {
     const data  = useStore()
+    
     const [over, setOver] = useState(true)
     const [cast, setCast] = useState(false)
     const [review, setReview] = useState(false)
     const [seasons, setSeasons] = useState(false)
     const [isBookmark, setIsBookmark] = useState(false)
 
-    //query data:
-    //bookmark
-  
-    //end
-
     const [Data] = useAxios({
-        axiosInstance: instance,
-        method: 'GET',
-        url: `/${type}/${id}?api_key=${process.env.REACT_APP_API_KEY}`,
-      })         
+      axiosInstance: instance,
+      method: 'GET',
+      url: `/${type}/${id}?api_key=${process.env.REACT_APP_API_KEY}`,
+    })
+
+    //query data:
+    useEffect(() => {
+      const isBookmark =  async () => { 
+          const res = await axios.post(
+            `${process.env.REACT_APP_BASE_URL}/personal/findBookmark`,
+            {
+              idUser: data[0].user._id, 
+              idMovie: id, 
+              type
+            },
+            { withCredentials: true }
+          )
+          setIsBookmark(res.data.bookmark)
+          return res.data.bookmark
+      }
       
+      isBookmark()
+    }, [])
+    
+    //bookmark
+  const addBookmark = async () => {
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_BASE_URL}/personal/bookmark`,
+        {
+          idUser: data[0].user._id, 
+          idMovie: id, 
+          type, 
+          image: `https://image.tmdb.org/t/p/w185${Data.poster_path}`,
+          name: Data.name || Data.original_title
+        },
+
+        { withCredentials: true }
+      )
+      return {data: response.data}
+    } 
+    catch (error) {
+        return {err: error}
+    }
+  }
+
+  const delBookmark = async () => {
+    try 
+    {
+      const response = await axios.delete(
+        `${process.env.REACT_APP_BASE_URL}/personal/bookmark`,
+        {
+          data: 
+          {
+            idUser: data[0].user._id, 
+            idMovie: id, 
+            type
+          }
+        },        
+        { withCredentials: true }
+      )
+      return {data: response.data}
+    } 
+    catch (error) {
+        return {err: error}
+    }
+  }
+    //end         
+    
     const totalSeaasons = Array.isArray(Data.seasons) && Data.seasons !== undefined ? Data.seasons.length:0
     const totalEp =Array.isArray(Data.seasons) && Data.seasons !== undefined?
                    Data.seasons.reduce((sum, curr) => curr.episode_count + sum,0) :0
@@ -121,18 +182,26 @@ const DetailBody = ({id, type, screen}) => {
               <div className='blur'></div>
               <div 
                 className='detail-icon'
-                onClick={() => {
+                onClick={async () => {
                     if(data[0].login ===true)
                       {if(isBookmark === true)
                         {
-                          console.log('Delete bookmark');
-                          
-                          setIsBookmark(false)
+                          // add toast
+                          const rs = await delBookmark()
+                          if(!rs.err)
+                            setIsBookmark(false)
+                          else {
+                            alert('err')
+                          }
                         }
                       else
                         {
-                          console.log('Create bookmark');
-                          setIsBookmark(true)
+                          const rs = await addBookmark() 
+                          if(!rs.err)
+                            setIsBookmark(true)
+                          else {
+                            alert('err')
+                          }                       
                         }}
                   }
                 }

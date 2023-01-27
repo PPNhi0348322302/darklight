@@ -4,13 +4,57 @@ import { TabTitle } from '../store/Genera'
 import SideBar from '../components/Comon/SideBar'
 import Sidebarmini from '../components/Comon/Sidebarmini'
 import { NavLink } from 'react-router-dom'
-
+import axios from "axios"
+import {useStore} from '../hooks'
+import {MdDelete} from 'react-icons/md'
 
 const Bookmark = () => {
   const [Bookmark, setBookmark] = useState([])
+  const [typeBookmark, setTypeBookmark] = useState('all')
+  const [reRender, setReRender] = useState(false)
+  const data  = useStore()
   // const currentUser = null
   TabTitle('Bookmark | DarkLight')
+
   //get data bookmark
+  useEffect(() => {
+    const isBookmark =  async () => { 
+        const res = await axios.get(
+          `${process.env.REACT_APP_BASE_URL}/personal/bookmark`,
+          {params: {
+            id: data[0].user._id,
+            type: typeBookmark
+          }},
+          { withCredentials: true }
+        )
+        setBookmark(res.data)
+        return res.data
+    }
+    
+    isBookmark()
+  }, [typeBookmark, reRender])
+
+  const delBookmark = async (id, type) => {
+    try 
+    {
+      const response = await axios.delete(
+        `${process.env.REACT_APP_BASE_URL}/personal/bookmark`,
+        {
+          data: 
+          {
+            idUser: data[0].user._id, 
+            idMovie: id, 
+            type
+          }
+        },        
+        { withCredentials: true }
+      )
+      return {data: response.data}
+    } 
+    catch (error) {
+        return {err: error}
+    }
+  }
 
   //screen
   const [type, setType] = useState(window.innerWidth <=480 ? 2 : window.innerWidth <=900 ? 1 :0)
@@ -35,20 +79,51 @@ const Bookmark = () => {
       {type ===1 ? <Sidebarmini /> : <SideBar screen = {type}/>}
       <BookmarkContent>
         <Headerside>
-            <button className = 'active'>
-              <span>Bookmark</span>
+          <div className='content-head'>
+            <span>YOUR BOOKMARK</span>
+          </div>
+          <div className='content-type'>
+            <button 
+                onClick={() => {
+                  setTypeBookmark('all')
+                }}
+                className={typeBookmark ==='all'?'active':''}
+            >
+                All
             </button>
-            
+            <button 
+              onClick={() => {setTypeBookmark('tv')}       }
+              className={typeBookmark ==='tv'?'active':''}
+            >
+                TV Show
+            </button>
+            <button 
+              onClick={() => {setTypeBookmark('movie')}}
+              className={typeBookmark ==='movie'?'active':''}
+            >
+                Movie
+            </button>
+          </div>
         </Headerside>
 
         <HisBody>
             {
               Array.isArray(Bookmark) && Bookmark.length === 0? <span>Not found</span>:
               Bookmark.map(item => (
-                <div  className='body-content-item'  key={item.id}>
+                <div  className='body-content-item'  key={item._id}>
+                  <div 
+                    className='delete-bookmark'
+                    onClick={ async () => {
+                      const rs  = await delBookmark(item.idMovie, item.type)
+                      setReRender(!reRender)
+                      return rs
+                    }}
+                  >
+                    <MdDelete color='rgb(0,60,181)'/>
+                  </div>
                   <NavLink to ={`/${item.type}/${item.idMovie}`} className='nav-link'>
-                    <img src={`https://image.tmdb.org/t/p/w342${item.img_path}`} alt=''/>
-                    <h3>{item.header}</h3>
+                    <img src={`https://image.tmdb.org/t/p/w342${item.imageMovie}`} alt=''/>
+                    <h3>{item.name}</h3>
                   </NavLink>
                 </div>
               ))
@@ -91,43 +166,60 @@ const BookmarkContent = styled.div`
 `
 const Headerside = styled.div`
   display: flex;
-  align-items: center;
+  flex-direction: column;
   width: 100%;
   height: 42px;
   margin-bottom: 40px;
-  
-  button{
-    font-size: 20px;
-    margin: 0 20px;
-    cursor: pointer;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: #fff;
+
+
+  .content-head{
+    display: flex;
+    justify-content:space-between;
+    align-items: center;
+    margin-bottom: 20px;
 
     span{
-      padding:0 10px;
+      font-size: ${({scr}) => scr === 2 ? '20px' : '30px'};
+      color: #fff;
+      font-weight: bold;
     }
   }
 
-  .active{
-    color: blue;
-    position: relative;
+  .content-type{
+      margin-bottom: 20px;
+      button{
+        background: transparent;
+        font-size: ${({scr}) => scr === 2 ? '16px' : '18px'};
+        color: rgba(255,255,255,0.7);
+        margin-right: 20px;
+        border: none;
+        outline: none;
+        position: relative;
+        transition: all 0.5s  linear;
+        cursor: pointer;
 
-    &:before{
-      content: '';
-      height:3px;
-      width: 100%;
-      background: blue;
-      position: absolute;
-      bottom: -4px;
-      left: 0;
-    }
+        &:hover{
+          color: #fff;
+        }
+      }
+
+      .active::before{
+          content:'';
+          position: absolute;
+          bottom: -8px;
+          left: 2px;
+          width: 100%;
+          height: 4px;
+          background: rgb(0,0,255);
+          transition: all 0.5s  linear;
+      }
   }
+
   
 `
 
 const HisBody = styled.div`
+    margin-top: 20px;
     width: 100%;
     display: flex;
     flex-wrap: wrap;
@@ -141,6 +233,22 @@ const HisBody = styled.div`
       background-color: rgba(255,255,255,0.1);
       border-radius:12px;
       transition: all 0.5s  ease-in;
+      position: relative;
+
+      .delete-bookmark{
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.4);
+        font-size: 16px;
+        transition: all 0.5s ease-in;
+      }
 
       .nav-link{
         text-decoration: none;
@@ -176,6 +284,10 @@ const HisBody = styled.div`
         transform:  scale(1.07);
         overflow: auto;
         z-index:9;
+
+        .delete-bookmark{
+          display: flex;
+        }
       }
       
 
