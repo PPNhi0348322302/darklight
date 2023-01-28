@@ -19,7 +19,8 @@ const DetailBody = ({id, type, screen}) => {
     const [review, setReview] = useState(false)
     const [seasons, setSeasons] = useState(false)
     const [isBookmark, setIsBookmark] = useState(false)
-
+    const [sortValues, setSortValues] = useState('Descending')
+    const [Reviews, setReviews] = useState([])
     const [Data] = useAxios({
       axiosInstance: instance,
       method: 'GET',
@@ -90,6 +91,10 @@ const DetailBody = ({id, type, screen}) => {
   }
     //end         
     
+    const changeRating = (e) => {
+      const value = e.target.value
+      setSortValues(value)
+    }
     const totalSeaasons = Array.isArray(Data.seasons) && Data.seasons !== undefined ? Data.seasons.length:0
     const totalEp =Array.isArray(Data.seasons) && Data.seasons !== undefined?
                    Data.seasons.reduce((sum, curr) => curr.episode_count + sum,0) :0
@@ -107,11 +112,44 @@ const DetailBody = ({id, type, screen}) => {
 
     const Cast = credits.cast
 
-    const [Review] = useAxios({
-      axiosInstance: instance,
-      method: 'GET',
-      url: `/${type}/${id}/reviews?api_key=${process.env.REACT_APP_API_KEY}&language=en-US&page=1`,
-    })
+    useEffect(() => {
+      
+      const getReviews =  async () => { 
+          const res = await axios.get(
+            `https://api.themoviedb.org/3/${type}/${id}/reviews?api_key=${process.env.REACT_APP_API_KEY}&language=en-US&page=1`,
+          )
+          let rs = res.data.results
+          
+          if(sortValues.localeCompare('Descending') !== 0)
+          {
+            for(let i=0; i < rs.length-1; i++){
+              for(let j=i+1; j < rs.length;j++){
+                const d1 = new Date(rs[i].updated_at)
+                const d2 = new Date(rs[j].updated_at)
+                if(d1.valueOf() > d2.valueOf() )
+                {
+                  [rs[i], rs[j]] = [rs[j], rs[i]]
+                }
+              }
+            }
+          }
+          else {
+            for(let i=0; i < rs.length-1; i++){
+              for(let j=i+1; j < rs.length;j++){
+                const d1 = new Date(rs[i].updated_at)
+                const d2 = new Date(rs[j].updated_at)
+                if(d1.valueOf() < d2.valueOf() )
+                  {
+                    [rs[i], rs[j]] = [rs[j], rs[i]]
+                  }
+              }
+            }
+          }
+          setReviews(res.data.results)
+          return res.data.results
+      }
+      getReviews()
+    }, [sortValues])
 
     const [Media] = useAxios({
       axiosInstance: instance,
@@ -155,10 +193,7 @@ const DetailBody = ({id, type, screen}) => {
         }
     }
 
-    const Update = (strDate) =>{
-        const Date = strDate.slice(0, strDate.indexOf('T'))
-        return Date
-    }
+
 
     const sliceURL = (url) => {
       if(typeof url === 'string' || url)
@@ -224,11 +259,6 @@ const DetailBody = ({id, type, screen}) => {
               <NavLink 
                 to ={`/${type}/watch/${id}`} 
                 className='detail-header-watch'
-                onClick={() => {
-                      if(data[0].login ===true)
-                      console.log('Create bookmark');
-                    }
-                  }
               >
                   <FaPlay className='icon'/>
                   <span>WATCH</span>
@@ -350,18 +380,22 @@ const DetailBody = ({id, type, screen}) => {
                                 <div className='review-content'>
                                       <div className='review-head'>
                                           <span>Sort Rating:</span>
-                                          <select className='sort-select'>
-                                              <option>Descending</option>
-                                              <option>Ascending</option>
+                                          <select 
+                                            className='sort-select'
+                                            value={sortValues}
+                                            onChange = {(e) => changeRating(e)}
+                                          >
+                                              <option value={'Descending'}>Descending</option>
+                                              <option value={'Ascending'}>Ascending</option>
                                           </select>
                                       </div>
                                       <div className='review-cmt'>
                                           {
-                                            Review.results.length===0?
+                                            Array.isArray(Reviews) && Reviews.length===0?
                                             <div className='no-review'>
                                                 <span>There are no reviews yet</span>
                                             </div>: 
-                                              Review.results.map(item => (
+                                              Reviews.map(item => (
                                                   <div className='review-cmt-item' key={item.id}>
                                                       <img 
                                                         src=
@@ -375,7 +409,7 @@ const DetailBody = ({id, type, screen}) => {
                                                       <div className='cmt-item-info'>
                                                           <span>{item.author_details.username}</span>
                                                           <p>{item.content}</p>
-                                                          <span>{Update(item.updated_at)}</span>
+                                                          <span>{item.updated_at}</span>
                                                       </div>
                                                   </div>
                                               ))
