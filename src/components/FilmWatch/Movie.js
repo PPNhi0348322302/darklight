@@ -1,17 +1,21 @@
-import React from 'react'
+import React, {useEffect} from 'react'
 import styled from 'styled-components'
-import {useAxios} from '../../hooks'
+import {useAxios, useStore} from '../../hooks'
 import {instance} from '../../shared/instance'
 import {FaStar} from 'react-icons/fa'
 import {AiTwotoneCalendar} from 'react-icons/ai'
 import {NavLink} from 'react-router-dom'
-const Movie = ({id, screen}) => {
+import axios from "axios"
 
+const Movie = ({id, screen}) => {
+  const data  = useStore()
+  
   const [Data] = useAxios({
     axiosInstance: instance,
     method: 'GET',
     url: `/movie/${id}?api_key=${process.env.REACT_APP_API_KEY}&language=en-US`,
   })
+
   const [Recom] = useAxios({
     axiosInstance: instance,
     method: 'GET',
@@ -19,9 +23,38 @@ const Movie = ({id, screen}) => {
   })  
   const similar_list = Recom.results
 
+  useEffect(() => {
+    const addHistory = async () => {
+      if(data[0].login === false)
+        return
+      try {
+        const response = await axios.post(
+          `${process.env.REACT_APP_BASE_URL}/personal/history`,
+          {
+            idUser: data[0].user._id, 
+            idMovie: id, 
+            type: 'movie', 
+            image: `https://image.tmdb.org/t/p/w185${Data.poster_path}`,
+            name: Data.title,
+            season: '0',
+            ep:0
+          },
+  
+          { withCredentials: true }
+        )
+        return {data: response.data}
+      } 
+      catch (error) {
+          return {err: error}
+      }
+    }
+    if(Data.title)
+      addHistory()
+    
+  },[Data])
   return (
     <Container scr = {screen}>
-        <div className='watch'>
+        <div className='watch' >
           <div className='watch-video'>
             <iFrame 
                 src={`https://www.2embed.to/embed/tmdb/movie?id=${id}`}

@@ -141,13 +141,16 @@ const Container = styled.div`
   flex-direction: ${({scr}) => scr === 2 ? 'column' : 'row'};
   height: calc(100vh - 60px);
   color: #fff;
+  
 `
 
 const BookmarkContent = styled.div`
   display: flex;
   flex: 1;
   flex-direction: column;
-  margin: 32px 0 0 32px;
+  height: 94%;
+  margin: 32px 0 30px 32px;
+  overflow-y: auto;
   &::-webkit-scrollbar{
     width: 0px;
     height: 40px;

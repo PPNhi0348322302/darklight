@@ -183,7 +183,7 @@ const DetailBody = ({id, type, screen}) => {
               <div 
                 className='detail-icon'
                 onClick={async () => {
-                    if(data[0].login ===true)
+                    if(data[0].login === true)
                       {if(isBookmark === true)
                         {
                           // add toast

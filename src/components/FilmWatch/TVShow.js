@@ -1,12 +1,14 @@
 import React, {useState, useEffect} from 'react'
 import styled from 'styled-components'
-import {useAxios} from '../../hooks'
+import {useAxios, useStore} from '../../hooks'
 import {instance} from '../../shared/instance'
 import {FaStar} from 'react-icons/fa'
 import {AiTwotoneCalendar} from 'react-icons/ai'
 import {NavLink} from 'react-router-dom'
+import axios from "axios"
 
 const TVShow = ({id, screen}) => {
+  const data  = useStore()
 
   const [Data] = useAxios({
     axiosInstance: instance,
@@ -64,7 +66,35 @@ const TVShow = ({id, screen}) => {
         return tmp
       }))
   }
+  useEffect(() => {
+    const addHistory = async () => {
+      if(data[0].login === false)
+        return
+      try {
+        const response = await axios.post(
+          `${process.env.REACT_APP_BASE_URL}/personal/history`,
+          {
+            idUser: data[0].user._id, 
+            idMovie: id, 
+            type: 'tv', 
+            image: `https://image.tmdb.org/t/p/w185${Data.poster_path}`,
+            name: Data.name,
+            season: season,
+            ep:ep
+          },
   
+          { withCredentials: true }
+        )
+        return {data: response.data}
+      } 
+      catch (error) {
+          return {err: error}
+      }
+    }
+    if(Data.name)
+      addHistory()
+    
+  },[Data, ep, season])
 
   return (
     <Container scr = {screen}>
