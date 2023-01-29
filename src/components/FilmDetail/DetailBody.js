@@ -44,7 +44,7 @@ const DetailBody = ({id, type, screen}) => {
       }
       
       isBookmark()
-    }, [])
+    }, [data])
     
     //bookmark
   const addBookmark = async () => {

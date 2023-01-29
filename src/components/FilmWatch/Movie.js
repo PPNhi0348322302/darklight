@@ -120,7 +120,6 @@ const Movie = ({id, screen}) => {
 const Container = styled.div`
     color: white;
     display: flex;
-    flex-direction: ${({scr}) => scr !== 0 ? 'column' : 'row'};
     border-left:2px solid rgba(255,255,255,0.2);
     overflow-x: hidden;
     flex-direction: ${({scr}) => scr === 0 ? 'row' : 'column'};
@@ -128,7 +127,6 @@ const Container = styled.div`
     .watch{
       /* padding: 20px 20px 0; */
         width: 100%;
-        height:100vh;
         &::-webkit-scrollbar{
           width: 0px;
           height: 40px;
