@@ -4,8 +4,8 @@ import styled from 'styled-components'
 import {AiOutlineHeart, AiFillHeart} from 'react-icons/ai'
 
 const commentOption = (comment) => {
-    const isLike = true
-    const numLike = 9
+    const isLike = comment.likers.length === 0 ? false : true
+    const numLike = comment.likers.length === 0 ? '' : comment.likers.length
     return (
         <CommentOption>
             <button> {numLike} { !isLike ? 
@@ -19,22 +19,14 @@ const commentOption = (comment) => {
                 />}
             </button>
             <button>Reply</button>
-            <span>{comment.updatedAt.slice(0, comment.updatedAt.indexOf('T'))}</span>
+            <span>{comment.updatedAt ? comment.updatedAt.slice(0, comment.updatedAt.indexOf('T')) : ''}</span>
         </CommentOption>
     )
     
 }
 
-const Comments = ({id}) => {
+const Comments = ({id, comment}) => {
     const [userComment, setUserComment] = useState({})
-    const comment = {
-        id: 1,
-        idUser: '63d2b6dd2c6d9de9bc7e3a42',
-        idMovie: '1',
-        content: 'Hello world',
-        reply: '2',
-        updatedAt:'2023-01-26T17:22:37.027+00:00'
-    }
     
     useEffect(() => {
         const getUserComments = async (id) => {
@@ -49,7 +41,7 @@ const Comments = ({id}) => {
             return res.data
         }
         getUserComments(comment.idUser) 
-    }, [id])
+    }, [id, comment.idUser])
     
   return (
     <Container>
@@ -68,7 +60,7 @@ const Comments = ({id}) => {
 const Container = styled.div`
     display: flex;
     flex-direction: column;
-    margin: 4px 0;
+    margin: 4px 0 10px;
 `
 
 const Content = styled.div`
