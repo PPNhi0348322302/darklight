@@ -51,7 +51,7 @@ const Movie = ({id, screen}) => {
     if(Data.title)
       addHistory()
     
-  },[Data])
+  },[data, Data, id])
   return (
     <Container scr = {screen}>
         <div className='watch' >

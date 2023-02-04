@@ -1,35 +1,12 @@
 import React, {useState, useEffect} from 'react'
 import axios from "axios"
 import styled from 'styled-components'
-import {AiOutlineHeart, AiFillHeart} from 'react-icons/ai'
-
-const commentOption = (comment) => {
-    const isLike = comment.likers.length === 0 ? false : true
-    const numLike = comment.likers.length === 0 ? '' : comment.likers.length
-    return (
-        <CommentOption>
-            <button> {numLike} { !isLike ? 
-                <AiOutlineHeart 
-                    fontSize={16}
-                    color = 'blue'
-                /> : 
-                <AiFillHeart 
-                    fontSize={16}
-                    color = 'red'
-                />}
-            </button>
-            <button>Reply</button>
-            <span>{comment.updatedAt ? comment.updatedAt.slice(0, comment.updatedAt.indexOf('T')) : ''}</span>
-        </CommentOption>
-    )
-    
-}
-
-const Comments = ({id, comment}) => {
+import CommentOption from './CommentOption'
+const Comments = ({type, id, comment, socket, setComment}) => {
     const [userComment, setUserComment] = useState({})
-    
     useEffect(() => {
         const getUserComments = async (id) => {
+            if(!id) return 'err'
             const res = await axios.get(
                 `${process.env.REACT_APP_BASE_URL}/user/user`,
                 {params: {
@@ -40,11 +17,13 @@ const Comments = ({id, comment}) => {
             setUserComment(res.data)
             return res.data
         }
-        getUserComments(comment.idUser) 
-    }, [id, comment.idUser])
+
+        
+        getUserComments(comment.idUser)
+    }, [id, comment])
     
   return (
-    <Container>
+    <ContainerCmt scr = {type}>
       <Content>
         <img src= {userComment.avatar} alt='' />
         <ContentComment>
@@ -52,15 +31,25 @@ const Comments = ({id, comment}) => {
             <span>{comment.content}</span>
         </ContentComment>
       </Content>
-        {commentOption(comment)}
-    </Container>
+      <CommentOption
+        key={comment._id} 
+        comment={comment} 
+        socket = {socket}
+        type = {type}
+        setComment = {setComment}
+      />
+      <ReplyContainer>
+
+      </ReplyContainer>
+    </ContainerCmt>
   )
 }
 
-const Container = styled.div`
+const ContainerCmt = styled.div`
     display: flex;
     flex-direction: column;
     margin: 4px 0 10px;
+    margin-left: ${({scr}) => scr === 'reply' ? '40px' : '0px'};
 `
 
 const Content = styled.div`
@@ -94,31 +83,11 @@ const ContentComment = styled.div`
     }
 `
 
-const CommentOption = styled.div`
-    display: flex;
-    margin: 6px 0 0 66px;
-    
-    button{
-        margin-right: 20px;
-        font-size: 12px;
-        border: none;
-        background: transparent;
-        color: white;
-        padding: 0;
-        cursor: pointer;
-        transition: all 0.5s linear;
-        display: flex;
-        align-items: center;
-
-        &:hover {
-            color: var(--primary-color);
-        }
-    }
-
-    span{
-        margin-right: 20px;
-        font-size: 12px;
-    }
+const ReplyContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin:10px 0 0 40px;
 `
+
 
 export default Comments

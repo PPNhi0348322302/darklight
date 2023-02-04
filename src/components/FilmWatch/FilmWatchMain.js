@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 import styled from 'styled-components'
 import Movie from './Movie'
 import TVShow from './TVShow'
@@ -7,75 +7,102 @@ import {BiCommentDetail} from'react-icons/bi'
 import {IoSend} from 'react-icons/io5'
 import { useStore } from '../../hooks'
 import axios from "axios"
-import {ssEvents} from '../../shared/sse'
+import socketIOClient from "socket.io-client"
 
 const FilmWatchMain = ({id, type,screen}) => {
   const [sortValues, setSortValues] = useState('Descending')
   const [comment, setComment] = useState([])
+  const [commentArrival, setCommentArrival] = useState(null)
   const [cmt, setCmt] = useState('')
   const data = useStore()
   const userId = data[0].user._id
+  const socket = useRef()
 
   const changeRating = (e) => {
     setSortValues(e.target.value)
   }
 
-  //get comments
   useEffect(() => {
     const getComments =  async () => { 
         const res = await axios.get(
           `${process.env.REACT_APP_BASE_URL}/comment/comments`,
           {params: {
             id: id,
+            type: sortValues
           }},
           { withCredentials: true }
         )
-        const rs = res.data.data
-        const sameArray = rs.every((value, index) => JSON.stringify(value)=== JSON.stringify(comment[index]))
-        
-        if( !sameArray)
-          setComment(res.data.data)
         return res.data
     }
+
+    const getReply = async (id) =>{
+      const rs = await axios.get(
+        `${process.env.REACT_APP_BASE_URL}/comment/reply`,
+        {params: {
+          id: id,
+        }},
+        { withCredentials: true }
+      )
+      if(rs.data.length > 0)
+      {
+        return (rs.data)
+      }
+      return []
+    }
+
     getComments()
-
-    ssEvents.addEventListener("message", (e) => {})
-    
-    // listen to comment event
-    ssEvents.addEventListener("comment", (e) => {
-      const data = JSON.parse(e.data)
-      setTimeout(() => {
-          setComment([...comment, data])
-      }, 500)
+    .then(data => {
+      let listCmt = data.map(  item => {
+        return getReply(item._id)
+                .then(data => {return {cmt: item, reply: data}})
+      })
+      return listCmt
     })
-    
-    //listen to comment reaction events
-    ssEvents.addEventListener("comment_reaction", (e) => {
-      const { liker, post } = JSON.parse(e.data)
-      const posts = comment.map((p) =>
-        p._id === userId
-          ? { ...p, likers: [...post.liker] }
-          : p
-      );
-      return posts
+    .then((data) => {
+      let items = Promise.all(data);
+      return items;
+    })
+    .then((data) => {
+        setComment(data)
     })
 
-    // listen to open event
-    ssEvents.onopen = (e) => {
-      console.log(e)
-    }
-    // listen to error event
-    ssEvents.onerror = (e) => {
-      console.log(e)
-    }
+  }, [id, userId, sortValues])
+  
 
-    return () => {
-      ssEvents.close()
+  useEffect(() => {
+    if (userId) {
+      socket.current = socketIOClient.connect(process.env.REACT_APP_BASE_URL)
+      socket.current.emit("add-user", userId)
+    
+      socket.current.on("comment-receive", (data) => {
+        setCommentArrival(data)
+      })
+      return () => {socket.current.disconnect()}
     }
+  }, [])
 
-  }, [id, userId, comment])
+  useEffect(() => {
+    if(commentArrival === null)
+      return
+    if(commentArrival.reply === ''){
+      let listCmt = comment
+      listCmt.unshift({cmt: commentArrival, reply: []})
+      setComment(listCmt)
+    }
+    else {
+      const listCmt = comment.map(item =>{
+        if(item.cmt._id === commentArrival.reply){
+          item.reply.unshift(commentArrival)
+        }
+        return item
+      })
+      setComment(listCmt)
+    }
+    setCommentArrival(null)      
+  }, [commentArrival, comment])
 
   const createComment =  async () => { 
+
     const res = await axios.post(
       `${process.env.REACT_APP_BASE_URL}/comment/comments`,
       {data: {
@@ -85,9 +112,31 @@ const FilmWatchMain = ({id, type,screen}) => {
       }},
       { withCredentials: true }
     )
-    return res.data
-}
 
+    if (userId)
+      socket.current.emit("send-comment", res.data)
+
+    setCmt('')
+    
+    if(res.data.reply === ''){
+      const Comments = [...comment]
+      Comments.unshift({cmt: res.data, reply: []})
+      setComment(Comments)
+    }
+    else {
+      const listCmt = comment.map(item =>{
+        if(item.cmt._id === res.data.reply){
+          item.reply.unshift(res.data)
+        }
+        return item
+      })
+      console.log(listCmt);
+      
+      setComment(listCmt)
+    }
+  }
+
+  
   return (
     <Container scr = {screen}>
       {
@@ -121,7 +170,8 @@ const FilmWatchMain = ({id, type,screen}) => {
           </div>
         </CommentsHead>
 
-        {data[0].user && <CommentInput>
+        {userId && 
+        <CommentInput>
             <img src={data[0].user.avatar} alt='' />
             <div>
               <input 
@@ -132,19 +182,32 @@ const FilmWatchMain = ({id, type,screen}) => {
               />
               <button 
                 onClick={ async () => {
-                  const rs = await createComment()
-                  setCmt('')
-                  setComment([...comment, rs.data[0]])
+                  await createComment()
                 }}
               ><IoSend/></button>
             </div>
         </CommentInput>}
-        {Array.isArray(comment) && comment.length > 0? comment.map(item => 
+
+        {Array.isArray(comment) && comment.length > 0? comment.map((item, index) =>
+        <div key = {index}>
             <Comment 
-              key = {item._id}
-              id={item._id}
-              comment = {item}
+              id={item.cmt._id}
+              comment = {item.cmt}
+              socket = {socket}
+              setComment = {setComment}
             /> 
+            {item.reply.map((item, index) => {
+                return <Comment 
+                  type= 'reply'
+                  key = {index}
+                  id={item._id}
+                  comment = {item}
+                  socket = {socket}
+                  setComment = {setComment}
+                />
+            })}
+        </div> 
+            
          ) : 'There are no comment yet'}
          
       </Comments>

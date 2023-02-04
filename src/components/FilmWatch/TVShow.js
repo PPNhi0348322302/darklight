@@ -94,7 +94,7 @@ const TVShow = ({id, screen}) => {
     if(Data.name)
       addHistory()
     
-  },[Data, ep, season])
+  },[Data, ep, season, data, id])
 
   return (
     <Container scr = {screen}>
