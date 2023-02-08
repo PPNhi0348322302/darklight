@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react'
+import React, {useEffect, useRef} from 'react'
 import styled from 'styled-components'
 import {useAxios, useStore} from '../../hooks'
 import {instance} from '../../shared/instance'
@@ -9,6 +9,7 @@ import axios from "axios"
 
 const Movie = ({id, screen}) => {
   const data  = useStore()
+  const effectRan = useRef(false)
   
   const [Data] = useAxios({
     axiosInstance: instance,
@@ -39,7 +40,12 @@ const Movie = ({id, screen}) => {
             season: '0',
             ep:0
           },
-  
+          {
+            headers: {
+            'Content-Type': 'application/json',
+            'Authorization' : data[0].token
+            }
+          },
           { withCredentials: true }
         )
         return {data: response.data}
@@ -48,10 +54,15 @@ const Movie = ({id, screen}) => {
           return {err: error}
       }
     }
-    if(Data.title)
+    if (effectRan.current === true && Data.title) {
       addHistory()
-    
-  },[data, Data, id])
+      effectRan.current = false
+    }
+    return () => {
+      effectRan.current = true
+    }
+  },[Data.title])
+  
   return (
     <Container scr = {screen}>
         <div className='watch' >
@@ -78,7 +89,7 @@ const Movie = ({id, screen}) => {
                   </div>
               </div>
               <div className='watch-genre'>
-                  {Data.genres.map(item => <span>{item.name}</span>)}
+                  {Data.genres.map((item, index) => <span key={index}>{item.name}</span>)}
               </div>
               <div className='watch-overview'>
                  <h3>Overview:</h3>

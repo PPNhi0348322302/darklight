@@ -1,4 +1,4 @@
-import { SET_THEME, SET_LOGIN, SET_CONTENT_TYPE, SET_SEARCH, SET_OPTION, SET_SCREEN, SET_USER} from "./constants"
+import { SET_THEME, SET_LOGIN, SET_CONTENT_TYPE, SET_SEARCH, SET_OPTION, SET_SCREEN, SET_USER, SET_TOKEN} from "./constants"
 
 export const setTheme = payload => ({
     type: SET_THEME,
@@ -32,5 +32,10 @@ export const setScreen = payload => ({
 
 export const setUser = payload => ({
     type: SET_USER,
+    payload
+})
+
+export const setToken = payload => ({
+    type: SET_TOKEN,
     payload
 })

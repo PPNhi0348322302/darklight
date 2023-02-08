@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 import styled from 'styled-components'
 import {useAxios, useStore} from '../../hooks'
 import {instance} from '../../shared/instance'
@@ -9,6 +9,7 @@ import axios from "axios"
 
 const TVShow = ({id, screen}) => {
   const data  = useStore()
+  const effectRan = useRef(false)
 
   const [Data] = useAxios({
     axiosInstance: instance,
@@ -66,12 +67,14 @@ const TVShow = ({id, screen}) => {
         return tmp
       }))
   }
+
   useEffect(() => {
+    
     const addHistory = async () => {
       if(data[0].login === false)
         return
       try {
-        const response = await axios.post(
+        await axios.post(
           `${process.env.REACT_APP_BASE_URL}/personal/history`,
           {
             idUser: data[0].user._id, 
@@ -82,19 +85,35 @@ const TVShow = ({id, screen}) => {
             season: season,
             ep:ep
           },
-  
+          {
+            headers: {
+            'Content-Type': 'application/json',
+            'Authorization' : data[0].token
+            }
+          },
           { withCredentials: true }
         )
-        return {data: response.data}
+        .then(response => {
+          return {data: response.data}
+        })
+        
       } 
       catch (error) {
           return {err: error}
       }
     }
-    if(Data.name)
-      addHistory()
     
-  },[Data, ep, season, data, id])
+    if (effectRan.current === true ) {
+      if(data[0].login && Data.name)
+        addHistory()
+      effectRan.current = false
+
+    }
+    return () => {
+      effectRan.current = true
+    }
+    
+  },[Data.name])
 
   return (
     <Container scr = {screen}>
@@ -408,7 +427,7 @@ const Container = styled.div`
     }
 
     .seasons{
-      width:${({scr}) => scr === 0 ? '330px' : '100%'};
+      width:${({scr}) => scr === 0 ? '330px' : '90%'};
       border-left: 2px solid rgba(255,255,255,0.2);
       padding: 20px 30px 20px 20px;
 

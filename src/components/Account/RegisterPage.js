@@ -22,7 +22,6 @@ const LoginPage = () => {
     //Register account
 
     const registerUser = async ({email, name, password, avatar}) => {
-      
       try {
         const response = await axios.post(
           `${process.env.REACT_APP_BASE_URL}/user/register`,
@@ -44,16 +43,15 @@ const LoginPage = () => {
       } else {
         try{
           const res = await registerUser({email, name, password, avatar: base_avatar})
-          console.log(res)
-          if(res.token){
+          if(res.accessToken){
             data[1](actions.setUser(res)) 
             data[1](actions.setLogIn(true))
+            data[1](actions.setToken(res.accessToken))
             navigate('/')
           }
         }
         catch(error) {
           console.log(error);
-          
         }
       }
   }

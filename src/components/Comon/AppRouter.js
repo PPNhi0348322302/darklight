@@ -18,9 +18,7 @@ const AppRouter = () => {
       console.log('Logout');
       
     }
-
     window.addEventListener("beforeunload", handleTabClosing)
-
     return window.removeEventListener('beforeunload', handleTabClosing)
   })
   

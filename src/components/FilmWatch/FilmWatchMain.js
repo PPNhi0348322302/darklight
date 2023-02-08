@@ -8,6 +8,8 @@ import {IoSend} from 'react-icons/io5'
 import { useStore } from '../../hooks'
 import axios from "axios"
 import socketIOClient from "socket.io-client"
+import {refreshToken, actions} from '../../store'
+import { useNavigate } from 'react-router-dom'
 
 const FilmWatchMain = ({id, type,screen}) => {
   const [sortValues, setSortValues] = useState('Descending')
@@ -17,11 +19,14 @@ const FilmWatchMain = ({id, type,screen}) => {
   const data = useStore()
   const userId = data[0].user._id
   const socket = useRef()
+  let navigate = useNavigate()
+console.log(comment);
 
   const changeRating = (e) => {
     setSortValues(e.target.value)
   }
 
+  //comment
   useEffect(() => {
     const getComments =  async () => { 
         const res = await axios.get(
@@ -30,6 +35,13 @@ const FilmWatchMain = ({id, type,screen}) => {
             id: id,
             type: sortValues
           }},
+          {
+            headers: {
+            'Content-Type': 'application/json',
+            'Authorization' : data[0].token
+            }
+          },
+          
           { withCredentials: true }
         )
         return res.data
@@ -41,6 +53,13 @@ const FilmWatchMain = ({id, type,screen}) => {
         {params: {
           id: id,
         }},
+        {
+          headers: {
+          'Content-Type': 'application/json',
+          'Authorization' : data[0].token
+          }
+        },
+        
         { withCredentials: true }
       )
       if(rs.data.length > 0)
@@ -103,40 +122,60 @@ const FilmWatchMain = ({id, type,screen}) => {
 
   const createComment =  async () => { 
 
-    const res = await axios.post(
+    await axios.post(
       `${process.env.REACT_APP_BASE_URL}/comment/comments`,
       {data: {
         idUser: userId,
         idMovie: id,
         content: cmt,
       }},
+      {
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization' : data[0].token
+        }
+      },
       { withCredentials: true }
     )
+    .then(res => {
+      if (userId)
+        socket.current.emit("send-comment", res.data)
 
-    if (userId)
-      socket.current.emit("send-comment", res.data)
-
-    setCmt('')
-    
-    if(res.data.reply === ''){
-      const Comments = [...comment]
-      Comments.unshift({cmt: res.data, reply: []})
-      setComment(Comments)
-    }
-    else {
-      const listCmt = comment.map(item =>{
-        if(item.cmt._id === res.data.reply){
-          item.reply.unshift(res.data)
-        }
-        return item
-      })
-      console.log(listCmt);
+      setCmt('')
       
-      setComment(listCmt)
-    }
+      if(res.data.reply === ''){
+        const Comments = [...comment]
+        Comments.unshift({cmt: res.data, reply: []})
+        setComment(Comments)
+      }
+      else {
+        const listCmt = comment.map(item =>{
+          if(item.cmt._id === res.data.reply){
+            item.reply.unshift(res.data)
+          }
+          return item
+        })
+        setComment(listCmt)
+      }
+    })
+    .catch( async err => {
+      if(err.request.status === 403) {
+        await refreshToken()
+        .then(response => {
+          data[1](actions.setToken(response.accessToken))
+        })
+        .catch( err => {
+          data[1](actions.setUser(null)) 
+          data[1](actions.setLogIn(false))
+          data[1](actions.setToken(''))
+          navigate('/login')
+        })
+      }
+      
+    })
+
   }
 
-  
   return (
     <Container scr = {screen}>
       {
@@ -238,13 +277,13 @@ const CommentsHead = styled.div`
   .comment-title{
     display: flex;
     align-items: center;
-    margin-right: 200px;
     h3{
       margin: -2px 0 0 4px;
     }
   }
 
   .comment-sort{
+    margin-left: auto;
     select{
       background: transparent;
       color: rgba(255,255,255,0.7);

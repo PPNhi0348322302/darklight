@@ -1,12 +1,13 @@
-import React, {useState,useEffect} from 'react'
+import React, {useState,useEffect, useRef} from 'react'
 import styled from 'styled-components'
 import { TabTitle } from '../store/Genera'
 import SideBar from '../components/Comon/SideBar'
 import Sidebarmini from '../components/Comon/Sidebarmini'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import axios from "axios"
 import {useStore} from '../hooks'
 import {MdDelete} from 'react-icons/md'
+import {refreshToken, actions} from '../store'
 
 const History = () => {
   TabTitle('History | DarkLight')
@@ -14,25 +15,58 @@ const History = () => {
   const [typeHistory, setTypeHistory] = useState('all')
   const [reRender, setReRender] = useState(false)
   const data  = useStore()
-  console.log(data);
-  
-  //get data
-  useEffect(() => {
+  const effectRan = useRef(false)
+  let navigate = useNavigate()
+
+
+  useEffect(() => {   
+     
     const getHistory =  async () => { 
-        const res = await axios.get(
-          `${process.env.REACT_APP_BASE_URL}/personal/history`,
+      
+      await axios.get(
+        `${process.env.REACT_APP_BASE_URL}/personal/history`,
           {params: {
             id: data[0].user._id,
             type: typeHistory
           }},
+          {
+            headers: {
+            'Content-Type': 'application/json',
+            'Authorization' : data[0].token
+            }
+          },
+          
           { withCredentials: true }
-        )
-        setHistory(res.data)
-        return res.data
+      )
+      .then(response => {
+        setHistory(response.data)
+      })
+      .catch( async err => {
+        
+        if(err.request.status === 403) {
+          await refreshToken()
+          .then(response => {
+            data[1](actions.setToken(response.accessToken))
+          })
+          .catch( err => {
+            data[1](actions.setUser(null)) 
+            data[1](actions.setLogIn(false))
+            data[1](actions.setToken(''))
+            navigate('/login')
+          })
+        }
+        
+      });
+      
+    }
+    if (effectRan.current === true ) {
+      getHistory()
+    }
+    return () => {
+      effectRan.current = true
     }
     
-    getHistory()
-  }, [typeHistory, reRender])
+  },[reRender, typeHistory]);
 
   const delHistory = async (id, path) => {
     try 
@@ -71,15 +105,15 @@ const History = () => {
     window.addEventListener("resize", handleResize)
 
     return () => window.addEventListener("resize", handleResize)
-  },[])
-
+  },[window.innerWidth])
+  
   return (
     <Container scr = {type}>
       {type ===1 ? <Sidebarmini /> : <SideBar screen = {type}/>}
-      <HistoryContent>
-      <Headerside>
+      <HistoryContent scr = {type}>
+      <HeaderSide>
           <div className='content-head'>
-            <span>YOUR BOOKMARK</span>
+            <span>YOUR HISTORY</span>
           </div>
           <div className='content-option'>
             <div className='content-type'>
@@ -121,7 +155,7 @@ const History = () => {
             </div>
             }
           </div>
-        </Headerside>
+        </HeaderSide>
 
         <HisBody scr = {type}>
             {
@@ -140,14 +174,16 @@ const History = () => {
                   </div>
                   <NavLink to ={`/${item.type}/${item.idMovie}`} className='nav-link'>
                     <img src={`https://image.tmdb.org/t/p/w342${item.imageMovie}`} alt=''/>
-                    <div className='item-title'>
-                      <h3>Header: {item.name}</h3>
-                      <span>Time: {item.timeWatch}</span>
-                    </div>
-                    <div className='item-end'>
-                      <h3>Type: {item.type === 'tv'? "TV Show" : "Movie"}</h3>
-                      <span>{item.type === 'tv'? 'Season: '+item.season : ''}</span>
-                      <span>{item.type === 'tv'? 'Episode: '+item.ep : ''}</span>
+                    <div className='his-item'>
+                      <div className='item-title'>
+                        <h3>Header: {item.name}</h3>
+                        <span>Time: {item.timeWatch}</span>
+                      </div>
+                      <div className='item-end'>
+                        <h3>Type: {item.type === 'tv'? "TV Show" : "Movie"}</h3>
+                        <span>{item.type === 'tv'? 'Season: '+item.season : ''}</span>
+                        <span>{item.type === 'tv'? 'Episode: '+item.ep : ''}</span>
+                      </div>
                     </div>
                   </NavLink>
                 </div>
@@ -190,6 +226,7 @@ const HistoryContent = styled.div`
   flex-direction: column;
   height: 94%;
   margin: 32px 0 0 32px;
+  margin: ${({scr}) => scr === 2 ? '10px' : '32px 0 0 32px'};
   overflow-y: auto;
   &::-webkit-scrollbar{
     width: 0px;
@@ -207,7 +244,7 @@ const HistoryContent = styled.div`
     background-color: rgb(18,18,18);
   }
 `
-const Headerside = styled.div`
+const HeaderSide = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -222,7 +259,7 @@ const Headerside = styled.div`
     margin-bottom: 20px;
 
     span{
-      font-size: ${({scr}) => scr === 2 ? '20px' : '30px'};
+      font-size: ${({scr}) => scr === 0 ? '30px' : '24px'};
       color: #fff;
       font-weight: bold;
     }
@@ -235,7 +272,7 @@ const Headerside = styled.div`
 
     .deleteAll{
         background: transparent;
-        font-size: ${({scr}) => scr === 2 ? '16px' : '18px'};
+        font-size: ${({scr}) => scr === 0 ? '18px' : '16px'};
         color: rgba(255,255,255,0.7);
         margin-right: 20px;
         border: none;
@@ -259,7 +296,7 @@ const Headerside = styled.div`
   .content-type{
       button{
         background: transparent;
-        font-size: ${({scr}) => scr === 2 ? '16px' : '18px'};
+        font-size: ${({scr}) => scr === 0 ? '18px' : '16px'};
         color: rgba(255,255,255,0.7);
         margin-right: 20px;
         border: none;
@@ -308,8 +345,8 @@ const HisBody = styled.div`
         top: 50%;
         bottom: 50%;
         transform: translateY(-50%);
-        right: 10px;
-        display: none;
+        right: ${({scr}) => scr === 2 ? '6px' : '10px'};
+        display: ${({scr}) => scr === 0 ? 'none' : 'flex'};
         align-items: center;
         justify-content: center;
         width: 32px;
@@ -325,7 +362,6 @@ const HisBody = styled.div`
         color: rgba(255,255,255,0.8);
         display: flex;
         justify-content: flex-start;
-        align-items: center;
 
         img{
           width: 32%;
@@ -347,32 +383,41 @@ const HisBody = styled.div`
           display: -webkit-box;
           -webkit-box-orient:  vertical;
           -webkit-line-clamp: 1;
-
+          margin: 0 0 6px;
         }
 
-        .item-title{
+        .his-item{
           display: flex;
-          flex-direction: column;
-          margin-left: 40px;
+          flex-direction: ${({scr}) => scr === 0 ? 'row' : 'column'};
+          margin: ${({scr}) => scr === 2 ? '0 0 4px 10px' : '2% 10% 0'};;
+          width: 100%;
+          margin: 26px 10px 0;
 
-          span{
-            font-size: 15px;
-            line-height: 20px;
-            height: 20px;
+          .item-title{
+            display: flex;
+            flex-direction: column;
+            flex: ${({scr}) => scr === 2 ? '1' : '4'};
+  
+            span{
+              font-size: 15px;
+              line-height: 20px;
+              height: 20px;
+            }
+          }
+  
+          .item-end{
+            flex: ${({scr}) => scr === 2 ? '2' : '1'};
+            display: flex;
+            flex-direction: column;
+            span{
+              line-height: 20px;
+              height: 20px;
+              margin-bottom: ${({scr}) => scr === 2 ? '4px' : '10px'};
+            }
+            
           }
         }
 
-        .item-end{
-          margin: 0 80px 0 auto;
-          display: flex;
-          flex-direction: column;
-          span{
-            line-height: 20px;
-            height: 20px;
-            margin-bottom: 10px;
-          }
-          
-        }
 
       }
 

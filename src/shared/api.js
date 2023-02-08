@@ -14,39 +14,7 @@ export const api = createApi({
         getUser: build.query({
             query: (id) => `general/user/${id}`,
             providesTags: ['User'],
-        }),
-        getTransactions: build.query({
-            query: ({page, pageSize, sort, search}) => ({
-                url: `client/transactions`,
-                method: 'GET',
-                params: {page, pageSize, sort, search}
-            }),
-            providesTags: ['Transactions'],
-        }),
-        getLogin: build.query({
-            query: ({email, password}) => ({
-                url: `user/login`,
-                method: 'POST',
-                params: {email, password}
-            }),
-            providesTags: ['Login'],
-        }),
-        getLoginWithGoogle: build.query({
-            query: ({email}) => ({
-                url: `user/loginGG`,
-                method: 'POST',
-                params: {email}
-            }),
-            providesTags: ['LoginWithGoogle'],
-        }),
-        getRegister: build.query({
-            query: ({email, name, password, avatar}) => ({
-                url: `user/register`,
-                method: 'POST',
-                params: {email, name, password, avatar}
-            }),
-            providesTags: ['Register'],
-        }),
+        })
     })
 })
 

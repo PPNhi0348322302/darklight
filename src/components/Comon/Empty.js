@@ -15,7 +15,7 @@ const Container = styled.div`
     justify-content: center;
     width: 100%;
     height: ${({scr}) => scr === 2 ? 'calc(100vh - 120px)' : '100%'};
-    font-size: 60px;
+    font-size: ${({scr}) => scr === 2 ? '20px' : '40px'};
     color: orange;
     letter-spacing: 1px;
 `

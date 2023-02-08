@@ -7,14 +7,6 @@ import { useStore } from '../hooks'
 
 const Profile = () => {
   TabTitle('Profile | DarkLight')
-  const [password, setPassword] = useState()
-  const [error, setError] = useState()
-  const [success, setSuccess] = useState()
-  const handleSubmit = async(e) => {
-    e.preventDefault()
-    //update pw
-  } 
-
   const data = useStore()
   const currentUser = data[0].user
 
@@ -52,17 +44,6 @@ const Profile = () => {
               <div className='info'>
                   <span>Name:  {currentUser.name||'Default'}</span>
                   <span>Email:  {currentUser.email}</span>
-                  <span>Change Password:  </span>
-                  <form className='form-change' onSubmit={handleSubmit}>
-                      <input 
-                          type='password' 
-                          placeholder='New Password'
-                          value = {password}
-                          onChange={e => setPassword(e.target.value)}
-                      ></input>
-                      <button type='submit'>Update</button>
-                  </form>
-                  <span>{success||error}</span>
               </div>
           </Prof>
         }

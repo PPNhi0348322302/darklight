@@ -2,8 +2,13 @@ import React, {useState, useEffect} from 'react'
 import axios from "axios"
 import styled from 'styled-components'
 import CommentOption from './CommentOption'
+import { useStore } from '../../hooks'
+
+
 const Comments = ({type, id, comment, socket, setComment}) => {
-    const [userComment, setUserComment] = useState({})
+  const [userComment, setUserComment] = useState({})
+  const data = useStore()
+
     useEffect(() => {
         const getUserComments = async (id) => {
             if(!id) return 'err'
@@ -12,13 +17,17 @@ const Comments = ({type, id, comment, socket, setComment}) => {
                 {params: {
                   id: id,
                 }},
+                {
+                  headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization' : data[0].token
+                  }
+                },
                 { withCredentials: true }
               )
             setUserComment(res.data)
             return res.data
         }
-
-        
         getUserComments(comment.idUser)
     }, [id, comment])
     

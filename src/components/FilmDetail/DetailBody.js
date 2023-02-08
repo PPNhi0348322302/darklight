@@ -1,4 +1,4 @@
-import React,{useEffect, useState} from 'react'
+import React,{useEffect, useState, useRef} from 'react'
 import styled from 'styled-components'
 import ReactPlayer from 'react-player'
 import {useAxios} from '../../hooks'
@@ -8,11 +8,14 @@ import {AiFillHeart} from 'react-icons/ai'
 import {HiOutlineDotsHorizontal} from 'react-icons/hi'
 import {GiShare} from 'react-icons/gi'
 import {FaPlay} from 'react-icons/fa'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import axios from "axios"
+import {refreshToken, actions} from '../../store'
 
 const DetailBody = ({id, type, screen}) => {
     const data  = useStore()
+    const effectRan = useRef(false)
+    let navigate = useNavigate()
     
     const [over, setOver] = useState(true)
     const [cast, setCast] = useState(false)
@@ -27,29 +30,57 @@ const DetailBody = ({id, type, screen}) => {
       url: `/${type}/${id}?api_key=${process.env.REACT_APP_API_KEY}`,
     })
 
-    //query data:
-    useEffect(() => {
+    //check bookmark
+    useEffect(() => {   
       const isBookmark =  async () => { 
-          const res = await axios.post(
-            `${process.env.REACT_APP_BASE_URL}/personal/findBookmark`,
+        await axios.post(
+          `${process.env.REACT_APP_BASE_URL}/personal/findBookmark`,
             {
               idUser: data[0].user._id, 
               idMovie: id, 
               type
             },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization' : data[0].token
+              }
+            },
             { withCredentials: true }
-          )
+        )
+        .then(res => {
           setIsBookmark(res.data.bookmark)
-          return res.data.bookmark
+        })
+        .catch( async err => {
+          if(err.request.status === 403) {
+            await refreshToken()
+            .then(res => {
+              data[1](actions.setToken(res.accessToken))
+            })
+            .catch( err => {
+              data[1](actions.setUser(null)) 
+              data[1](actions.setLogIn(false))
+              data[1](actions.setToken(''))
+              navigate('/login')
+            })
+          }
+          
+        })
+        
+      }
+      if (effectRan.current === true ) {
+        isBookmark()
+      }
+      return () => {
+        effectRan.current = true
       }
       
-      isBookmark()
-    }, [data])
-    
+    },[id, data[0].token])
+  
     //bookmark
   const addBookmark = async () => {
     try {
-      const response = await axios.post(
+      await axios.post(
         `${process.env.REACT_APP_BASE_URL}/personal/bookmark`,
         {
           idUser: data[0].user._id, 
@@ -58,10 +89,33 @@ const DetailBody = ({id, type, screen}) => {
           image: `https://image.tmdb.org/t/p/w185${Data.poster_path}`,
           name: Data.name || Data.original_title
         },
-
+        {
+          headers: {
+          'Content-Type': 'application/json',
+          'Authorization' : data[0].token
+          }
+        },
         { withCredentials: true }
       )
-      return {data: response.data}
+      .then(response => {
+        return {data: response.data}
+      })
+      .catch( async err => {
+        if(err.request.status === 403) {
+          await refreshToken()
+          .then(response => {
+            data[1](actions.setToken(response.accessToken))
+          })
+          .catch( err => {
+            data[1](actions.setUser(null)) 
+            data[1](actions.setLogIn(false))
+            data[1](actions.setToken(''))
+            navigate('/login')
+          })
+        }
+        
+      })
+      
     } 
     catch (error) {
         return {err: error}
@@ -71,7 +125,7 @@ const DetailBody = ({id, type, screen}) => {
   const delBookmark = async () => {
     try 
     {
-      const response = await axios.delete(
+      await axios.delete(
         `${process.env.REACT_APP_BASE_URL}/personal/bookmark`,
         {
           data: 
@@ -80,10 +134,33 @@ const DetailBody = ({id, type, screen}) => {
             idMovie: id, 
             type
           }
-        },        
+        }, 
+        {
+          headers: {
+          'Content-Type': 'application/json',
+          'Authorization' : data[0].token
+          }
+        },
         { withCredentials: true }
       )
-      return {data: response.data}
+      .then(response => {
+        return {data: response.data}
+      })
+      .catch( async err => {
+        if(err.request.status === 403) {
+          await refreshToken()
+          .then(response => {
+            data[1](actions.setToken(response.accessToken))
+          })
+          .catch( err => {
+            data[1](actions.setUser(null)) 
+            data[1](actions.setLogIn(false))
+            data[1](actions.setToken(''))
+            navigate('/login')
+          })
+        }
+      })
+      
     } 
     catch (error) {
         return {err: error}
@@ -157,7 +234,6 @@ const DetailBody = ({id, type, screen}) => {
       url: `/${type}/${id}/videos?api_key=${process.env.REACT_APP_API_KEY}&language=en-US`,
     })
     
-
     const handleClick = (type) =>{
         switch(type){
           case 'over':
@@ -193,8 +269,6 @@ const DetailBody = ({id, type, screen}) => {
         }
     }
 
-
-
     const sliceURL = (url) => {
       if(typeof url === 'string' || url)
         {
@@ -218,26 +292,25 @@ const DetailBody = ({id, type, screen}) => {
               <div 
                 className='detail-icon'
                 onClick={async () => {
-                    if(data[0].login === true)
-                      {if(isBookmark === true)
+                    if(data[0].token !== '')
+                    {
+                      if(isBookmark === true)
                         {
                           // add toast
-                          const rs = await delBookmark()
-                          if(!rs.err)
-                            setIsBookmark(false)
-                          else {
-                            alert('err')
-                          }
+                          await delBookmark()
+                          .then(res => setIsBookmark(false))
+                          .catch(err => alert(err))
                         }
                       else
                         {
-                          const rs = await addBookmark() 
-                          if(!rs.err)
-                            setIsBookmark(true)
-                          else {
-                            alert('err')
-                          }                       
-                        }}
+                          await addBookmark()
+                          .then(res => setIsBookmark(true))
+                          .catch(err => alert(err))                 
+                      }
+                    }
+                    else {
+                      navigate('/login')
+                    }
                   }
                 }
               >
@@ -526,8 +599,8 @@ const Container = styled.div`
           display: flex;
           position: absolute;
           top: 20px;
-          right: 30px;
-          padding-right: 20px;
+          right: ${({scr}) => scr === 0 ? '30px' : '20px'};
+          padding-right: ${({scr}) => scr === 0 ? '20px' : '0'};;
           
           .icon-item{
               margin-left: 10px;
@@ -573,11 +646,11 @@ const Container = styled.div`
           display: flex;
           flex-direction: column;
           flex: 1 1;
-          margin:0 50px 10px 60px;
+          margin:10px 50px 10px 60px;
           margin-left: ${({scr}) => scr ===2 ? '10px' : '60px'};
 
           .detail-header-title{
-            font-size: ${({scr}) => scr !== 0 ? '30px' : '40px'};
+            font-size: ${({scr}) => scr !== 0 ? '24px' : '40px'};
             font-weight: bold;
             padding-right: ${({scr}) => scr === 1 ? '10px' : '0'};
           }
@@ -585,11 +658,11 @@ const Container = styled.div`
           .detail-header-genre{
             display: flex;
             flex-wrap: wrap;
-            margin-top:16px;
+            margin-top:  ${({scr}) => scr !== 2 ? '16px' : '8px'};
 
             span{
               font-size: ${({scr}) => scr !== 0 ? '14px' : '16px'};
-              padding: 5px 18px 8px;
+              padding: ${({scr}) => scr === 2 ? '5px 10px 8px' : '5px 18px 8px'};
               border-radius:20px;
               margin:4px 10px 0 0;
               border: 2px solid rgba(255, 255, 255, 0.4);
@@ -631,7 +704,7 @@ const Container = styled.div`
     .detail-content{
       display: flex;
       flex-direction: ${({scr}) => scr === 2 ? 'column' : 'row'};
-      overflow-y: auto;
+      overflow-y: ${({scr}) => scr === 0 ? 'auto' : 'inherit'};
       max-height:${({scr}) => scr !== 0 ? 'auto' : '345px'};
       overflow-x: hidden;
       
@@ -742,11 +815,11 @@ const Container = styled.div`
       .detail-content-view{
           flex: 1;
           display: flex;
-          align-items: center;
+          align-items: ${({scr}) => scr === 2 ? 'flex-start' :'center'};
           flex-direction: column;
-          margin:${({scr}) => scr === 2 ? '50% 0 0 20px' :scr === 1 ? '16% 0 0 20px' : '0'};
+          margin:${({scr}) => scr === 2 ? '30% 0 0 20px' :scr === 1 ? '16% 0 0 20px' : '0'};
           padding:   ${({scr}) => scr === 1 ? '28px 10px 28px 0' : scr===2? '28px 10px' :'28px 64px'};
-          z-index:999;
+          z-index:100;
           .detail-view-nav{
             display: flex;
             position: relative;
@@ -1036,7 +1109,7 @@ const Container = styled.div`
           .media-content{
             display: flex;
             flex-direction: column;
-            align-items: ${({scr}) => scr === 1 ? 'flex-start' : 'center'};
+            align-items: ${({scr}) => scr !== 0 ? 'flex-start' : 'center'};
             padding: 12px 10px 0 20px;
             overflow-y: auto;
             height: ${({scr}) => scr !== 0 ? '100%' : '440px'};

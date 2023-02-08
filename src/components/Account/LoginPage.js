@@ -62,6 +62,7 @@ const LoginPage = () => {
               if( rs && rs.data.token ){
                 data[1](actions.setUser(rs.data)) 
                 data[1](actions.setLogIn(true))
+                data[1](actions.setToken(res.data.accessToken))
                 navigate('/')
               }
             }
@@ -85,9 +86,10 @@ const LoginPage = () => {
         try{
           const res = await login({email, password})
           
-          if( res && res.data.token ){
+          if( res && res.data.accessToken ){
             data[1](actions.setUser(res.data)) 
             data[1](actions.setLogIn(true))
+            data[1](actions.setToken(res.data.accessToken))
             navigate('/')
           }
         }

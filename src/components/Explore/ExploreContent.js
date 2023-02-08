@@ -12,31 +12,36 @@ import ReactPaginate from "react-paginate";
 const ExploreContent = ({screen}) => {
   const [open, setOpen] = useState(false)
   const [state, dispatch] = useStore()
-  const [sorttype, setSortType] = useState('popular')
+  const [sortType, setSortType] = useState('popular')
   const option = useRef('') 
   //paginate
   const [Data, setData] = useState([])
-  const [pageCount, setpageCount] = useState(0)
+  const [pageCount, setPageCount] = useState(0)
+  const effectRan = useRef(false)
 
   let limit = 10
   useEffect(() => {
     const getList = async () => {
       const res = await fetch(
-        `https://api.themoviedb.org/3/${state.content_type}/${sorttype}?api_key=${process.env.REACT_APP_API_KEY}&language=en-US&page=1`
+        `https://api.themoviedb.org/3/${state.content_type}/${sortType}?api_key=${process.env.REACT_APP_API_KEY}&language=en-US&page=1`
       )
       const data = await res.json()
       const total = data.total_pages
-      setpageCount(Math.ceil(total / limit))
+      setPageCount(Math.ceil(total / limit))
       setData(data.results)
       
     }
-
-    getList()
-  }, [limit, sorttype, state.content_type])
+    if (effectRan.current === true ) {
+      getList()
+    }
+    return () => {
+      effectRan.current = true
+    }
+  }, [limit, sortType, state.content_type])
 
   const fetchComments = async (currentPage) => {
     const res = await fetch(
-      `https://api.themoviedb.org/3/${state.content_type}/${sorttype}?api_key=${process.env.REACT_APP_API_KEY}&language=en-US&page=${currentPage}`
+      `https://api.themoviedb.org/3/${state.content_type}/${sortType}?api_key=${process.env.REACT_APP_API_KEY}&language=en-US&page=${currentPage}`
     )
     const data = await res.json()
     return data
@@ -52,13 +57,13 @@ const ExploreContent = ({screen}) => {
 
   const ChangeOption = () => {
     setSortType(option.current.value)
-    setpageCount(0)
+    setPageCount(0)
   }
   
   const handleType = (type) => 
   {
     dispatch(actions.setContentType(type))
-    setpageCount(0)
+    setPageCount(0)
   }
   
   return (

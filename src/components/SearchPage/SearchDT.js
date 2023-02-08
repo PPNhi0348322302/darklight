@@ -247,29 +247,27 @@ const Container = styled.div`
     flex: 1;
     padding: 30px 30px 0;
     display: flex;
+    align-items: center;
     flex-direction: column;
     width: 100%;
     .search{
-        margin-left: ${({scr}) => scr !== 0 ? '20px' : '60px'};
+        /* margin-left: ${({scr}) => scr !== 0 ? '20px' : '60px'}; */
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         border-radius:20px;
-        max-width: 720px;
-        width: ${({scr}) => scr !== 0 ? '60%' : '100%'};
+        width: ${({scr}) => scr !== 0 ? '80%' : '80%'};
         height: auto;
         background: rgb(28,28,30);
         padding: 0px 20px ;
         position: relative;
-        z-index:99;
+        z-index:10;
 
         .search-boxs{
-          margin: 10px 30px;
           display: flex;
-          max-width: 720px;
-          width: 100%;
-          height:32px;
+          width: 80%;
+          padding: 10px 20px;
           .search-icon{
             margin-right: 10px;
             font-size: 28px;

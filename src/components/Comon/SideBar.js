@@ -77,7 +77,6 @@ const SideBar = ({screen}) => {
         }
       }
 
-
     //Toast
     let navigate = useNavigate()
     const [list, setList] = useState([])
@@ -246,14 +245,15 @@ const SideBar = ({screen}) => {
 const Container = styled.div`
     display: flex;
     flex-direction: column;
-
+    z-index: 999;
+    transition: all 0.5s linear;
 `
 const HeaderMobile = styled.div`
     display: ${({mb}) => mb===true ? 'flex' : 'none'};
     justify-content: space-between;
     align-items: center;
     height: 60px;
-    background: rgba(255,255,255,0.1);
+    background: rgb(255,255,255,0.1);
     img{
         width: 40px;
         height: 40px;

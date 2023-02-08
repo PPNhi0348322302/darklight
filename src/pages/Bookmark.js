@@ -1,38 +1,69 @@
-import React, {useState,useEffect} from 'react'
+import React, {useState,useEffect, useRef} from 'react'
 import styled from 'styled-components'
 import { TabTitle } from '../store/Genera'
 import SideBar from '../components/Comon/SideBar'
 import Sidebarmini from '../components/Comon/Sidebarmini'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import axios from "axios"
 import {useStore} from '../hooks'
 import {MdDelete} from 'react-icons/md'
+import {refreshToken, actions} from '../store'
 
 const Bookmark = () => {
   const [Bookmark, setBookmark] = useState([])
   const [typeBookmark, setTypeBookmark] = useState('all')
   const [reRender, setReRender] = useState(false)
   const data  = useStore()
-  // const currentUser = null
   TabTitle('Bookmark | DarkLight')
-
+  let navigate = useNavigate()
+  const effectRan = useRef(false)
+  
   //get data bookmark
-  useEffect(() => {
-    const isBookmark =  async () => { 
-        const res = await axios.get(
-          `${process.env.REACT_APP_BASE_URL}/personal/bookmark`,
+  useEffect(() => {   
+    const getBookmark =  async () => { 
+      await axios.get(
+        `${process.env.REACT_APP_BASE_URL}/personal/bookmark`,
           {params: {
             id: data[0].user._id,
             type: typeBookmark
-          }},
+          }},  
+          {
+            headers: {
+            'Content-Type': 'application/json',
+            'Authorization' : data[0].token
+            }
+          },
+          
           { withCredentials: true }
-        )
-        setBookmark(res.data)
-        return res.data
+      )
+      .then(response => {
+        setBookmark(response.data)
+      })
+      .catch( async err => {
+        if(err.request.status === 403) {
+          await refreshToken()
+          .then(response => {
+            data[1](actions.setToken(response.accessToken))
+          })
+          .catch( err => {
+            data[1](actions.setUser(null)) 
+            data[1](actions.setLogIn(false))
+            data[1](actions.setToken(''))
+            navigate('/login')
+          })
+        }
+        
+      })
+      
+    }
+    if (effectRan.current === true ) {
+      getBookmark()
+    }
+    return () => {
+      effectRan.current = true
     }
     
-    isBookmark()
-  }, [typeBookmark, reRender])
+  },[reRender, typeBookmark]);
 
   const delBookmark = async (id, type) => {
     try 
@@ -61,7 +92,6 @@ const Bookmark = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      
       if(window.innerWidth <= 480)
         setType(2)
       else if(window.innerWidth <= 900)
@@ -78,7 +108,7 @@ const Bookmark = () => {
     <Container scr = {type}>
       {type ===1 ? <Sidebarmini /> : <SideBar screen = {type}/>}
       <BookmarkContent>
-        <Headerside>
+        <Headerside scr = {type}>
           <div className='content-head'>
             <span>YOUR BOOKMARK</span>
           </div>
@@ -106,7 +136,7 @@ const Bookmark = () => {
           </div>
         </Headerside>
 
-        <HisBody>
+        <HisBody scr = {type}>
             {
               Array.isArray(Bookmark) && Bookmark.length === 0? <span>Not found</span>:
               Bookmark.map(item => (
@@ -226,11 +256,11 @@ const HisBody = styled.div`
     width: 100%;
     display: flex;
     flex-wrap: wrap;
-    justify-content: ${({scr}) => scr === 2 ? 'center' : 'flex-start'};
+    justify-content: flex-start;
     
     .body-content-item{
       margin: 8px 16px;
-      width:200px;
+      width: ${({scr}) => scr === 2 ? '40%' : '18%'};
       position: relative;
       text-align: center;
       background-color: rgba(255,255,255,0.1);
@@ -242,13 +272,14 @@ const HisBody = styled.div`
         position: absolute;
         top: 10px;
         right: 10px;
-        display: none;
+        display: ${({scr}) => scr === 0 ? 'none' : 'flex'};
         align-items: center;
         justify-content: center;
         width: 32px;
         height: 32px;
         border-radius: 50%;
         background: rgba(255,255,255,0.4);
+        background: ${({scr}) => scr === 0 ? 'rgba(255,255,255,0.4)' : 'white'};
         font-size: 16px;
         transition: all 0.5s ease-in;
       }
