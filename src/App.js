@@ -14,20 +14,28 @@ const App = () => {
   useEffect(() =>{
     const autoLogin = async () => {
       try {
-        const response = await axios.get(
+        await axios.get(
           `${process.env.REACT_APP_BASE_URL}/user`,
-          { withCredentials: true }
+          {
+            withCredentials: true,
+            headers: {
+            'Content-Type': 'application/json',
+            'Authorization' : data[0].token
+            },
+          },
         )
-        if( response && response.data.login ){
-          data[1](actions.setUser(response.data)) 
-          data[1](actions.setToken(response.data.accessToken))
-          data[1](actions.setLogIn(true))
-        }
-        else {
-          data[1](actions.setUser({})) 
-          data[1](actions.setToken(''))
-          data[1](actions.setLogIn(false))
-        }
+        .then(response =>{
+          if( response && !response.data.login ){
+            data[1](actions.setUser(response.data)) 
+            data[1](actions.setToken(response.data.accessToken))
+            data[1](actions.setLogIn(true))
+          }
+          else {
+            data[1](actions.setUser({})) 
+            data[1](actions.setToken(''))
+            data[1](actions.setLogIn(false))
+          }
+        })
       } 
       catch (error) {
           return {err: error}

@@ -41,12 +41,12 @@ const Movie = ({id, screen}) => {
             ep:0
           },
           {
+            withCredentials: true,
             headers: {
             'Content-Type': 'application/json',
             'Authorization' : data[0].token
-            }
+            },
           },
-          { withCredentials: true }
         )
         return {data: response.data}
       } 

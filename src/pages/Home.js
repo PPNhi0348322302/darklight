@@ -3,10 +3,12 @@ import styled from 'styled-components'
 import Content from '../components/Home/Content'
 import SearchBox from '../components/Comon/SearchBox'
 import SideBar from '../components/Comon/SideBar'
+import { TabTitle } from '../store/Genera'
 
 import Sidebarmini from '../components/Comon/Sidebarmini'
 const Home = () => {
   const [type, setType] = useState(window.innerWidth <=480 ? 2 : window.innerWidth <=900 ? 1 :0)
+  TabTitle('Home | DarkLight')
 
   useEffect(() => {
     const handleResize = () => {

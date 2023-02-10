@@ -1,28 +1,28 @@
 import React, {useEffect, useCallback} from 'react'
 import styled from 'styled-components'
 
-const Toast = ({ toastlist, position, setList }) => {
+const Toast = ({ toastList, position, setList }) => {
     const deleteToast = useCallback(id => {
-        const toastListItem = toastlist.filter(e => e.id !== id)
+        const toastListItem = toastList.filter(e => e.id !== id)
         setList(toastListItem)
-      }, [toastlist, setList])
+      }, [toastList, setList])
     
       useEffect(() => {
         const interval = setInterval(() => {
-          if(toastlist.length) {
-            deleteToast(toastlist[0].id)
+          if(toastList.length) {
+            deleteToast(toastList[0].id)
           }
         }, 3000)
     
         return () => {
           clearInterval(interval)
         }
-      }, [toastlist, deleteToast])
+      }, [toastList, deleteToast])
 
   return (
-    <Container>
+    <Container position={position}>
         {
-            toastlist.map((toast, index) =>(
+            toastList.map((toast, index) =>(
                 <div
                     key={index}
                     className='notification toast'
@@ -33,7 +33,7 @@ const Toast = ({ toastlist, position, setList }) => {
                         <p className='title'>{toast.title}</p>
                         <p className='description'>{toast.description}</p>
                     </div>
-                    <button onClick={deleteToast}>X</button>
+                    <button onClick={() =>deleteToast(toast.id)}>X</button>
                     <div 
                         className='wh'
                         style={{ backgroundColor: toast.backgroundColor }}
@@ -50,7 +50,7 @@ const Container = styled.div`
     position: fixed;
     z-index: 10;
     bottom: 1rem;
-    right: 1rem;
+    right:  ${({position}) => position==='1' ? '-8rem' : '1rem'};
     animation: toast-in-right .7s;
     z-index:100;
 
@@ -126,7 +126,7 @@ const Container = styled.div`
 
     .toast {
         height: 50px;
-        width: 365px;
+        width: 320px;
         color: #fff;
         padding: 20px 15px 10px 10px;
     }

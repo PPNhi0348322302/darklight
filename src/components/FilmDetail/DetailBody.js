@@ -11,9 +11,12 @@ import {FaPlay} from 'react-icons/fa'
 import { NavLink, useNavigate } from 'react-router-dom'
 import axios from "axios"
 import {refreshToken, actions} from '../../store'
+import Toast from '../Comon/Toast'
+import {BiCheckCircle, BiInfoCircle} from 'react-icons/bi'
 
 const DetailBody = ({id, type, screen}) => {
     const data  = useStore()
+    
     const effectRan = useRef(false)
     let navigate = useNavigate()
     
@@ -41,12 +44,12 @@ const DetailBody = ({id, type, screen}) => {
               type
             },
             {
+              withCredentials: true,
               headers: {
-                'Content-Type': 'application/json',
-                'Authorization' : data[0].token
+              'Content-Type': 'application/json',
+              'Authorization' : data[0].token
               }
             },
-            { withCredentials: true }
         )
         .then(res => {
           setIsBookmark(res.data.bookmark)
@@ -90,12 +93,12 @@ const DetailBody = ({id, type, screen}) => {
           name: Data.name || Data.original_title
         },
         {
+          withCredentials: true,
           headers: {
           'Content-Type': 'application/json',
           'Authorization' : data[0].token
           }
         },
-        { withCredentials: true }
       )
       .then(response => {
         return {data: response.data}
@@ -136,12 +139,12 @@ const DetailBody = ({id, type, screen}) => {
           }
         }, 
         {
+          withCredentials: true,
           headers: {
           'Content-Type': 'application/json',
           'Authorization' : data[0].token
           }
         },
-        { withCredentials: true }
       )
       .then(response => {
         return {data: response.data}
@@ -226,7 +229,7 @@ const DetailBody = ({id, type, screen}) => {
           return res.data.results
       }
       getReviews()
-    }, [sortValues])
+    }, [sortValues, id, type])
 
     const [Media] = useAxios({
       axiosInstance: instance,
@@ -281,6 +284,38 @@ const DetailBody = ({id, type, screen}) => {
     const urlCheck = (str) => {
         return str ===null ||str.indexOf('https') >=0 ? false : true
     }
+
+        //Toast
+        const [list, setList] = useState([])
+        let toastProperties = null
+    
+        const showToast = (type, des) => {
+            switch(type) {
+            case 'success':
+                toastProperties = {
+                    id: list.length+1,
+                    icon: <BiCheckCircle className='icon' style={{ backgroundColor: '#5cb85c' }}/>,
+                    title: 'Success',
+                    description: des,
+                    backgroundColor: '#5cb85c'
+                }
+                break;
+            case 'warning':
+                toastProperties = {
+                    id: list.length+1,
+                    icon: <BiInfoCircle className='icon' style={{ backgroundColor: '#f0ad4e' }}/>,
+                    title: 'Warning',
+                    description: des,
+                    backgroundColor: '#f0ad4e'
+                }
+                break;
+            default:
+                toastProperties = [];
+            }
+            setList([...list, toastProperties]);
+        }
+    
+        //end toast 
     
   if( Data.length!==0)  
     return (
@@ -292,7 +327,7 @@ const DetailBody = ({id, type, screen}) => {
               <div 
                 className='detail-icon'
                 onClick={async () => {
-                    if(data[0].token !== '')
+                    if(data[0].token !== '' && data[0].login)
                     {
                       if(isBookmark === true)
                         {
@@ -300,16 +335,18 @@ const DetailBody = ({id, type, screen}) => {
                           await delBookmark()
                           .then(res => setIsBookmark(false))
                           .catch(err => alert(err))
+                          showToast('success',`Delete bookmark`)
                         }
                       else
                         {
                           await addBookmark()
                           .then(res => setIsBookmark(true))
-                          .catch(err => alert(err))                 
+                          .catch(err => alert(err))   
+                          showToast('success',`Add bookmark`)              
                       }
                     }
                     else {
-                      navigate('/login')
+                      showToast('warning',`You need to login to use website`)
                     }
                   }
                 }
@@ -543,6 +580,7 @@ const DetailBody = ({id, type, screen}) => {
                 
               </div>
           </div>
+          <Toast toastList={list}  setList={setList}/>
       </Container>
     )
   else return (

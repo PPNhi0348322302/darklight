@@ -28,13 +28,12 @@ const Bookmark = () => {
             type: typeBookmark
           }},  
           {
+            withCredentials: true,
             headers: {
             'Content-Type': 'application/json',
             'Authorization' : data[0].token
-            }
+            },
           },
-          
-          { withCredentials: true }
       )
       .then(response => {
         setBookmark(response.data)
@@ -78,7 +77,13 @@ const Bookmark = () => {
             type
           }
         },        
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+          'Content-Type': 'application/json',
+          'Authorization' : data[0].token
+          },
+        },
       )
       return {data: response.data}
     } 

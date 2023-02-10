@@ -20,7 +20,6 @@ const FilmWatchMain = ({id, type,screen}) => {
   const userId = data[0].user._id
   const socket = useRef()
   let navigate = useNavigate()
-console.log(comment);
 
   const changeRating = (e) => {
     setSortValues(e.target.value)
@@ -36,13 +35,12 @@ console.log(comment);
             type: sortValues
           }},
           {
+            withCredentials: true,
             headers: {
             'Content-Type': 'application/json',
             'Authorization' : data[0].token
-            }
+            },
           },
-          
-          { withCredentials: true }
         )
         return res.data
     }
@@ -54,13 +52,12 @@ console.log(comment);
           id: id,
         }},
         {
+          withCredentials: true,
           headers: {
           'Content-Type': 'application/json',
           'Authorization' : data[0].token
-          }
+          },
         },
-        
-        { withCredentials: true }
       )
       if(rs.data.length > 0)
       {
@@ -130,12 +127,12 @@ console.log(comment);
         content: cmt,
       }},
       {
+        withCredentials: true,
         headers: {
         'Content-Type': 'application/json',
         'Authorization' : data[0].token
-        }
+        },
       },
-      { withCredentials: true }
     )
     .then(res => {
       if (userId)

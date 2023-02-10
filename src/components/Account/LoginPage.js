@@ -6,7 +6,7 @@ import {actions} from '../../store'
 import {useGoogleLogin} from '@react-oauth/google'
 import axios from "axios"
 
-const LoginPage = () => {
+const LoginPage = ({type}) => {
   const data  = useStore() 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -23,7 +23,13 @@ const LoginPage = () => {
       const response = await axios.post(
         `${process.env.REACT_APP_BASE_URL}/user/login`,
         {email, password},
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+          'Content-Type': 'application/json',
+          'Authorization' : data[0].token
+          },
+        },
       )
       return {data: response.data}
     } 
@@ -38,7 +44,13 @@ const LoginPage = () => {
       const response = await axios.post(
         `${process.env.REACT_APP_BASE_URL}/user/loginWithGoogle`,
         {email, name, avatar},
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+          'Content-Type': 'application/json',
+          'Authorization' : data[0].token
+          },
+        },
       )
       return {data: response.data}
     } 
@@ -58,8 +70,8 @@ const LoginPage = () => {
             try{
               const info = res.data
               const rs = await loginWGoogle({email: info.email, name: info.name, avatar: info.picture})
-              
-              if( rs && rs.data.token ){
+              console.log(rs)
+              if( rs && rs.data.accessToken ){
                 data[1](actions.setUser(rs.data)) 
                 data[1](actions.setLogIn(true))
                 data[1](actions.setToken(res.data.accessToken))
@@ -81,17 +93,24 @@ const LoginPage = () => {
       e.preventDefault()
       setError()
       if(password === '' || email === '') {
-          setError('Password, email does not empty')
+        setError('Password, email does not empty')
       } else {
         try{
-          const res = await login({email, password})
+          await login({email, password})
+          .then(res => {
+            if(res.data.err)
+              setError(res.data.err)
+              
+            else {
+              data[1](actions.setUser(res.data)) 
+              data[1](actions.setLogIn(true))
+              data[1](actions.setToken(res.data.accessToken))
+              navigate('/')
+            }
+          })
+          .catch(err => console.error(err))
           
-          if( res && res.data.accessToken ){
-            data[1](actions.setUser(res.data)) 
-            data[1](actions.setLogIn(true))
-            data[1](actions.setToken(res.data.accessToken))
-            navigate('/')
-          }
+          
         }
         catch(error) {
           console.log(error);
@@ -101,10 +120,9 @@ const LoginPage = () => {
 
 
   return (
-    <MainContainer>
+    <MainContainer scr = {type}>
       <WelcomeText>DarkLight</WelcomeText>
       <InputContainer onSubmit = {handleSubmit}>
-        <span>{error}</span>
         <StyledInput 
             type="email" 
             placeholder="Email" 
@@ -118,6 +136,7 @@ const LoginPage = () => {
             value = {password}
             onChange={e => setPassword(e.target.value)}
         />
+        <span style = {{color: 'red'}}>{error}</span>
 
         <ButtonContainer>
           <StyledButton type='submit'>Sign Up</StyledButton>
@@ -128,7 +147,7 @@ const LoginPage = () => {
       <LoginWith>OR LOGIN WITH</LoginWith>
       <HorizontalRule />
       
-      <IconsContainer>
+      <IconsContainer scr = {type}>
         <button 
             className='icon'
             onClick={e=>handleGoogleSignIn(e)}
@@ -155,46 +174,15 @@ const MainContainer = styled.div`
   -webkit-backdrop-filter: blur(8.5px);
   border-radius: 10px;
   color: #ffffff;
-  @media only screen and (max-width: 320px) {
-    width: 80vw;
-    height: 90vh;
-    hr {
-      margin-bottom: 0.3rem;
-    }
-    h4 {
-      font-size: small;
-    }
-  }
-  @media only screen and (min-width: 360px) {
-    width: 80vw;
-    height: 90vh;
-    h4 {
-      font-size: small;
-    }
-  }
-  @media only screen and (min-width: 411px) {
-    width: 80vw;
-    height: 90vh;
-  }
-  @media only screen and (min-width: 768px) {
-    width: 80vw;
-    height: 60vh;
-  }
-  @media only screen and (min-width: 1024px) {
-    width: 70vw;
-    height: 50vh;
-  }
-  @media only screen and (min-width: 1280px) {
-    width: 30vw;
-    height: 60vh;
-  }
+  width:  ${({scr}) => scr === 0 ? '30vw' : '80vw'};
+  height: 60vh;
+
 `;
 
 const WelcomeText = styled.h2`
   margin: 3rem 0 ;
   text-transform: uppercase;
   letter-spacing: 0.4rem;
-
 `;
 
 const InputContainer = styled.form`
@@ -216,8 +204,8 @@ const StyledInput = styled.input`
   padding: 0.5rem 2rem;
   border: none;
   outline: none;
-  color: #3c354e;
-  font-size: 14px;
+  color: white;
+  font-size: 15px;
   font-weight: bold;
   margin-bottom: 20px;
   &:focus {
@@ -291,7 +279,7 @@ const IconsContainer = styled.div`
     justify-content: center;
     border-radius:8px;
     background: rgba(255, 255, 255, 0.6);
-    padding: 0.5rem 2rem;
+    padding:  ${({scr}) => scr === 2 ? '0.5rem 0.5rem' : '0.5rem 2rem'};
     cursor: pointer;
     img {
         width:1.5rem;
@@ -299,7 +287,7 @@ const IconsContainer = styled.div`
     }
 
     span{
-      margin-left: 30px;
+      margin-left:  ${({scr}) => scr === 2 ? '12px' : '30px'};
       font-size: 14px;
       font-weight: bold;
     }

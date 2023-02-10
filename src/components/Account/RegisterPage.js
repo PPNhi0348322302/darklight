@@ -5,7 +5,7 @@ import axios from "axios"
 import {useStore} from '../../hooks'
 import {actions} from '../../store'
 
-const LoginPage = () => {
+const LoginPage = ({type}) => {
     let navigate = useNavigate()
     const data = useStore()
     const handleLogin = () => {
@@ -26,7 +26,13 @@ const LoginPage = () => {
         const response = await axios.post(
           `${process.env.REACT_APP_BASE_URL}/user/register`,
           {email, name, password, avatar},
-          { withCredentials: true }
+          {
+            withCredentials: true,
+            headers: {
+            'Content-Type': 'application/json',
+            'Authorization' : data[0].token
+            },
+          },
         )
         return response.data
       } 
@@ -42,13 +48,19 @@ const LoginPage = () => {
           setError('Password does not match')
       } else {
         try{
-          const res = await registerUser({email, name, password, avatar: base_avatar})
-          if(res.accessToken){
-            data[1](actions.setUser(res)) 
-            data[1](actions.setLogIn(true))
-            data[1](actions.setToken(res.accessToken))
-            navigate('/')
-          }
+          await registerUser({email, name, password, avatar: base_avatar})
+          .then(res => {
+            if(res.err)
+              setError(res.err)
+            
+            else {
+              data[1](actions.setUser(res)) 
+              data[1](actions.setLogIn(true))
+              data[1](actions.setToken(res.accessToken))
+              navigate('/')
+            }
+          })
+          
         }
         catch(error) {
           console.log(error);
@@ -57,13 +69,12 @@ const LoginPage = () => {
   }
   
     return (
-    <MainContainer>
+    <MainContainer scr = {type}>
       <WelcomeText>Register</WelcomeText>
       
       <InputContainer
           onSubmit = {handleSubmit}
       >
-        <span>{error}</span>
         <StyledInput 
             type="email" 
             placeholder="Email" 
@@ -89,7 +100,7 @@ const LoginPage = () => {
             value = {confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
         />
-
+        <span style = {{color: 'red'}}>{error || ' '}</span> 
         <ButtonContainer>
           <StyledButton 
               type='submit'
@@ -116,26 +127,17 @@ const MainContainer = styled.div`
   -webkit-backdrop-filter: blur(8.5px);
   border-radius: 10px;
   color: #ffffff;
-  @media only screen and (min-width: 411px) {
-    width: 80vw;
-    height: 90vh;
-  }
-  @media only screen and (min-width: 768px) {
-    width: 80vw;
-    height: 80vh;
-  }
-  @media only screen and (min-width: 1024px) {
-    width: 30vw;
-    height: 60vh;
-  }
+  width:  ${({scr}) => scr === 0 ? '30vw' : '80vw'};
+  height: 60vh;
 `;
+
 
 const WelcomeText = styled.h2`
   margin: 3rem 0 ;
   text-transform: uppercase;
   letter-spacing: 0.4rem;
-
 `;
+
 
 const InputContainer = styled.form`
   display: flex;
@@ -156,8 +158,8 @@ const StyledInput = styled.input`
   padding: 0.5rem 2rem;
   border: none;
   outline: none;
-  color: #3c354e;
-  font-size: 14px;
+  color: white;
+  font-size: 15px;
   font-weight: bold;
   margin-bottom: 20px;
   &:focus {
@@ -180,6 +182,7 @@ const ButtonContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 20px;
 `;
 
 const StyledButton = styled.button`

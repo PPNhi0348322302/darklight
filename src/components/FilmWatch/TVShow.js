@@ -86,12 +86,12 @@ const TVShow = ({id, screen}) => {
             ep:ep
           },
           {
+            withCredentials: true,
             headers: {
             'Content-Type': 'application/json',
             'Authorization' : data[0].token
-            }
+            },
           },
-          { withCredentials: true }
         )
         .then(response => {
           return {data: response.data}

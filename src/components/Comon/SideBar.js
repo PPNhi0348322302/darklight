@@ -68,7 +68,14 @@ const SideBar = ({screen}) => {
         try {
           const response = await axios.post(
             `${process.env.REACT_APP_BASE_URL}/user/logout`,
-            { withCredentials: true }
+            {},
+            {
+                withCredentials: true,
+                headers: {
+                'Content-Type': 'application/json',
+                'Authorization' : ''
+                },
+              },
           )
           return {res: response.data}
         } 
@@ -86,23 +93,23 @@ const SideBar = ({screen}) => {
         switch(type) {
         case 'success':
             toastProperties = {
-            id: list.length+1,
-            icon: <BiCheckCircle className='icon' style={{ backgroundColor: '#5cb85c' }}/>,
-            title: 'Success',
-            description: des,
-            backgroundColor: '#5cb85c'
+                id: list.length+1,
+                icon: <BiCheckCircle className='icon' style={{ backgroundColor: '#5cb85c' }}/>,
+                title: 'Success',
+                description: des,
+                backgroundColor: '#5cb85c'
             }
             break;
         case 'warning':
             toastProperties = {
-            id: list.length+1,
-            icon: <BiInfoCircle className='icon' style={{ backgroundColor: '#f0ad4e' }}/>,
-            title: 'Warning',
-            description: des,
-            backgroundColor: '#f0ad4e'
+                id: list.length+1,
+                icon: <BiInfoCircle className='icon' style={{ backgroundColor: '#f0ad4e' }}/>,
+                title: 'Warning',
+                description: des,
+                backgroundColor: '#f0ad4e'
             }
             break;
-            case 'danger':
+        case 'danger':
             toastProperties = {
                 id: list.length+1,
                 icon: <BiXCircle className='icon' style={{ backgroundColor: '#d9534f' }}/>,
@@ -118,7 +125,7 @@ const SideBar = ({screen}) => {
     }
 
     const handleClick =() => {
-        showToast('warning',`You need to login to use ${state.option.name}`)
+        showToast('warning',`You need to login to use website`)
     }
 
     //end toast 
@@ -222,7 +229,7 @@ const SideBar = ({screen}) => {
                                         if(state.login === true){
                                             const res = await logOut()
                                             if( res && res.res ){
-                                                dispatch(actions.setUser(null))
+                                                dispatch(actions.setUser({}))
                                                 dispatch(actions.setLogIn(false))
                                             }
                                         }
@@ -235,7 +242,7 @@ const SideBar = ({screen}) => {
                         </div>
                     </div>
                 </Headerside>
-                <Toast toastlist={list}  setList={setList}/>
+                <Toast toastList={list} position='1'  setList={setList}/>
             </Sidebar>
         </Container>
 

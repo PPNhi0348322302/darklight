@@ -30,13 +30,12 @@ const History = () => {
             type: typeHistory
           }},
           {
+            withCredentials: true,
             headers: {
             'Content-Type': 'application/json',
             'Authorization' : data[0].token
-            }
+            },
           },
-          
-          { withCredentials: true }
       )
       .then(response => {
         setHistory(response.data)
@@ -80,7 +79,13 @@ const History = () => {
             type : typeHistory
           }
         },        
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+          'Content-Type': 'application/json',
+          'Authorization' : data[0].token
+          },
+        },
       )
       return {data: response.data}
     } 

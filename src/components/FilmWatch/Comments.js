@@ -18,12 +18,12 @@ const Comments = ({type, id, comment, socket, setComment}) => {
                   id: id,
                 }},
                 {
+                  withCredentials: true,
                   headers: {
                   'Content-Type': 'application/json',
                   'Authorization' : data[0].token
                   }
                 },
-                { withCredentials: true }
               )
             setUserComment(res.data)
             return res.data

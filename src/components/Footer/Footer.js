@@ -41,7 +41,7 @@ const Footer = () => {
                 </a>
             </div>
             <div>
-                <a href="https://github.com/PPNhi0348322302">
+                <a href="https://github.com/ptynhi99">
                     <BsGithub style={{color: 'white'}}/>
                 </a>
             </div>

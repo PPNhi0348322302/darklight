@@ -131,12 +131,12 @@ const CommentOption = ({comment, socket, type, setComment}) => {
                 userId : data[0].user._id
             },
             {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization' : data[0].token
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization' : data[0].token
                 }
-            },
-            { withCredentials: true }
+              },
             )
 
             if(isLike) {
@@ -159,12 +159,12 @@ const CommentOption = ({comment, socket, type, setComment}) => {
                 id: id,
               }},
               {
+                withCredentials: true,
                 headers: {
-                'Content-Type': 'application/json',
-                'Authorization' : data[0].token
+                    'Content-Type': 'application/json',
+                    'Authorization' : data[0].token
                 }
               },
-              { withCredentials: true }
             )
             
             return rs.data.likers.length || ''
@@ -187,12 +187,12 @@ const CommentOption = ({comment, socket, type, setComment}) => {
             reply: comment._id
           }},
           {
+            withCredentials: true,
             headers: {
             'Content-Type': 'application/json',
             'Authorization' : data[0].token
             }
           },
-          { withCredentials: true }
         )
         .then(res => {
             if (data[0].user._id)
