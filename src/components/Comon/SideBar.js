@@ -242,7 +242,7 @@ const SideBar = ({screen}) => {
                         </div>
                     </div>
                 </Headerside>
-                <Toast toastList={list} position='1'  setList={setList}/>
+                <Toast toastList={list} position={screen ===2 ? '1' : ''}  setList={setList}/>
             </Sidebar>
         </Container>
 

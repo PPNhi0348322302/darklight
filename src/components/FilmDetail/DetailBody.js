@@ -71,7 +71,7 @@ const DetailBody = ({id, type, screen}) => {
         })
         
       }
-      if (effectRan.current === true ) {
+      if (effectRan.current === true && data[0].login) {
         isBookmark()
       }
       return () => {
