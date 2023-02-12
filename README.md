@@ -3,10 +3,16 @@
 ## 🛠 Introduction
 
 Here is my source code for website. With my code: 
-* **From the data stored in the database, the website supports the admin in statistical operations, Find where your users are located.**
-* **Client Facing: can view detailed list and number of reviews for each product, list of customers, transactions and total transaction volume by region.**
-* **Sales: Overview of general revenue and profit, Chart of daily, monthly sales, Breakdown of Sales By Category.**
-* **Management: Managing admins and list of admins, Track your Affiliate Sales Performance.**
+* **web uses TMDB API and NodeJS server stores data from buttDB.**
+* **When users log in to the system, they will be able to use the following functions: view profiles, add and delete bookmarks, save and display movie viewing history information.**
+* **Users can comment, reply and like comments realtime.**
+* **Update information about genres, trending, top rate... of movies and tv shows.**
+* **Search (with suggestions) by movie name, tv show, actor...**
+* **View detailed information about casts, ratings, time, reviews, seasons, ... of each movie/tv show that the user wants.**
+* **Responsive interface to each device and user permissions.**
+
+### 🛠 Demo:
+<a href="https://darklight-rfl3.onrender.com"></a>
 
 ## 🛠 Languages:
 
@@ -50,6 +56,16 @@ Here is my source code for website. With my code:
   <i>Describe the function of Watch page</i>
 </p>
 
+### Comment realtime:
+<p align="center">
+  <img src="demo/cmt.png" width=800><br/>
+</p>
+
+<p align="center">
+  <img src="demo/cmt.gif" width=800><br/>
+  <i>Comment</i>
+</p>
+
 ### Explore page:
 <p align="center">
   <img src="demo/explore.png" width=800><br/>
@@ -91,17 +107,5 @@ Here is my source code for website. With my code:
 </p>
 
 
-
-
-<!-- 
-### Responsive web for mobile:
-<p align="center">
-  <img src="demo/18.png" width=800><br/>
-</p>
-
-### Responsive web for tablet:
-<p align="center">
-  <img src="demo/19.png" width=800><br/>
-</p> -->
 
 
