@@ -20,10 +20,6 @@ export const api = createApi({
 
 export const {
     useGetUserQuery,
-    useGetTransactionsQuery,
-    useGetLoginQuery,
-    useGetRegisterQuery,
-    useGetLoginWithGoogleQuery
 } = api
 
 export default api

@@ -40,11 +40,11 @@ const Footer = () => {
                     <BsFacebook style={{color: 'white'}}/>
                 </a>
             </div>
-            <div>
+            {/* <div>
                 <a href="https://github.com/ptynhi99">
                     <BsGithub style={{color: 'white'}}/>
                 </a>
-            </div>
+            </div> */}
         </Info>
     </Container>
   )
